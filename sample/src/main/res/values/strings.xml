@@ -5,4 +5,39 @@
     <string name="chart_user_growth_title">User Growth (Code-based)</string>
     <string name="chart_market_share_title">Market Share (XML-based)</string>
     <string name="chart_performance_title">Performance Radar (Builder)</string>
+
+    <!-- Mock A11y Strings for sales_quarterly (Bar Chart) -->
+    <string name="a11y_chart_sales_quarterly_brief">季度销售额柱状图，展示四个季度数据</string>
+    <string name="a11y_chart_sales_quarterly_detailed">季度销售额柱状图，用于展示公司年度销售趋势。包含四个季度的销售数据：Q1销售额120万元，Q2销售额150万元，Q3销售额180万元达到峰值，Q4销售额90万元。整体呈先升后降趋势。</string>
+    <string name="a11y_chart_sales_quarterly_point_0">Q1，销售额120万元</string>
+    <string name="a11y_chart_sales_quarterly_point_1">Q2，销售额150万元</string>
+    <string name="a11y_chart_sales_quarterly_point_2">Q3，销售额180万元，最高值</string>
+    <string name="a11y_chart_sales_quarterly_point_3">Q4，销售额90万元</string>
+
+    <!-- Mock A11y Strings for user_growth (Line Chart) -->
+    <string name="a11y_chart_user_growth_brief">用户增长趋势折线图，展示上半年六个月数据</string>
+    <string name="a11y_chart_user_growth_detailed">用户增长趋势折线图，展示上半年用户增长情况。1月新增用户1200人，2月1500人，3月1800人，4月2200人，5月2800人，6月达到3500人。整体呈持续上升趋势，增长幅度逐月加大。</string>
+    <string name="a11y_chart_user_growth_point_0">1月，新增用户1200人</string>
+    <string name="a11y_chart_user_growth_point_1">2月，新增用户1500人</string>
+    <string name="a11y_chart_user_growth_point_2">3月，新增用户1800人</string>
+    <string name="a11y_chart_user_growth_point_3">4月，新增用户2200人</string>
+    <string name="a11y_chart_user_growth_point_4">5月，新增用户2800人</string>
+    <string name="a11y_chart_user_growth_point_5">6月，新增用户3500人，最高值</string>
+
+    <!-- Mock A11y Strings for market_share (Pie Chart) -->
+    <string name="a11y_chart_market_share_brief">市场份额分布饼图，展示四类产品占比</string>
+    <string name="a11y_chart_market_share_detailed">市场份额分布饼图，展示各产品线市场占有率。产品A占35%为市场领导者，产品B占28%位居第二，产品C占22%，其他产品合计占15%。</string>
+    <string name="a11y_chart_market_share_point_0">产品A，市场份额35%，最大占比</string>
+    <string name="a11y_chart_market_share_point_1">产品B，市场份额28%</string>
+    <string name="a11y_chart_market_share_point_2">产品C，市场份额22%</string>
+    <string name="a11y_chart_market_share_point_3">其他，市场份额15%</string>
+
+    <!-- Mock A11y Strings for performance_radar (Radar Chart) -->
+    <string name="a11y_chart_performance_radar_brief">员工绩效评估雷达图，展示五个维度评分</string>
+    <string name="a11y_chart_performance_radar_detailed">员工绩效评估雷达图，用于年度员工绩效综合评估。五个维度评分分别为：沟通能力85分，技术水平90分为最高分，团队协作78分为最低分，创新思维82分，执行力88分。整体表现均衡，技术水平突出。</string>
+    <string name="a11y_chart_performance_radar_point_0">沟通能力，得分85分</string>
+    <string name="a11y_chart_performance_radar_point_1">技术水平，得分90分，最高分</string>
+    <string name="a11y_chart_performance_radar_point_2">团队协作，得分78分</string>
+    <string name="a11y_chart_performance_radar_point_3">创新思维，得分82分</string>
+    <string name="a11y_chart_performance_radar_point_4">执行力，得分88分</string>
 </resources>
