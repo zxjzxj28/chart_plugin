@@ -54,11 +54,11 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
     public abstract DirectoryProperty getOutputDir();
 
     @Input
-    public abstract Property<Boolean> getEnabled();
+    public abstract Property<Boolean> getLayoutProcessingEnabled();
 
     @TaskAction
     public void processLayouts() {
-        if (!getEnabled().get()) {
+        if (!getLayoutProcessingEnabled().get()) {
             getLogger().info("Layout processing is disabled");
             return;
         }
