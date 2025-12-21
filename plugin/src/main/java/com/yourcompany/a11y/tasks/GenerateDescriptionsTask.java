@@ -63,7 +63,7 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
     public abstract Property<File> getCacheDir();
 
     @Input
-    public abstract Property<Long> getTimeout();
+    public abstract Property<Long> getApiTimeout();
 
     @Input
     public abstract Property<Integer> getConcurrency();
@@ -104,7 +104,7 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
         A11yApiService apiService = new A11yApiService(
                 getApiEndpoint().get(),
                 getApiKey().getOrElse(""),
-                getTimeout().get(),
+                getApiTimeout().get(),
                 getConcurrency().get(),
                 locales
         );

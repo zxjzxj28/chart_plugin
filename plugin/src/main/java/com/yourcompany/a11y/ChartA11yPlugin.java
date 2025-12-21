@@ -43,8 +43,9 @@ public class ChartA11yPlugin implements Plugin<Project> {
         });
     }
 
+    @SuppressWarnings("rawtypes")
     private void configureAndroidProject(Project project, ChartA11yExtension extension) {
-        AndroidComponentsExtension<?> androidComponents = project.getExtensions()
+        AndroidComponentsExtension androidComponents = project.getExtensions()
                 .getByType(AndroidComponentsExtension.class);
 
         androidComponents.onVariants(androidComponents.selector().all(), variant -> {
@@ -72,7 +73,7 @@ public class ChartA11yPlugin implements Plugin<Project> {
                     task.getLocales().set(extension.getLocales());
                     task.getEnableCache().set(extension.getEnableCache());
                     task.getCacheDir().set(extension.getCacheDir());
-                    task.getTimeout().set(extension.getTimeout());
+                    task.getApiTimeout().set(extension.getTimeout());
                     task.getConcurrency().set(extension.getConcurrency());
                     task.getFailOnError().set(extension.getFailOnError());
 
@@ -95,7 +96,7 @@ public class ChartA11yPlugin implements Plugin<Project> {
                     task.setGroup("chart-a11y");
                     task.setDescription("Process layout files for accessibility for " + variant.getName());
 
-                    task.getEnabled().set(extension.getProcessLayouts());
+                    task.getLayoutProcessingEnabled().set(extension.getProcessLayouts());
 
                     // Input: src/main/res/layout
                     File layoutDir = new File(project.getProjectDir(), "src/main/res/layout");
