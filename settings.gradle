@@ -21,6 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = 'chart-a11y'
 
-include ':plugin'
+// Note: ':plugin' is NOT included here because it's used as a composite build
+// via includeBuild('plugin') in pluginManagement block above
 include ':runtime'
 include ':sample'
