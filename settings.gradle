@@ -1,4 +1,7 @@
 pluginManagement {
+    // Include plugin module for composite build (allows development without publishing)
+    includeBuild('plugin')
+
     repositories {
         gradlePluginPortal()
         google()
@@ -11,6 +14,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // For MPAndroidChart
+        maven { url = uri("https://jitpack.io") }
     }
 }
 

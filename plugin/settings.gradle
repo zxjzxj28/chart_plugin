@@ -1,0 +1,2 @@
+// Settings for plugin module (used in composite builds)
+rootProject.name = 'chart-a11y-plugin'

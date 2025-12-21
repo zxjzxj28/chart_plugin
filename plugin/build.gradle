@@ -3,16 +3,33 @@ plugins {
     id 'maven-publish'
 }
 
+// Plugin version configuration (self-contained for composite builds)
+def agpVersion = '8.1.0'
+def gsonVersion = '2.10.1'
+def okhttpVersion = '4.11.0'
+
+group = 'com.yourcompany.a11y'
+version = '1.0.0'
+
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+repositories {
+    google()
+    mavenCentral()
+}
+
 dependencies {
     implementation gradleApi()
-    implementation "com.android.tools.build:gradle:${rootProject.ext.agpVersion}"
-    implementation "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
-    implementation "com.squareup.okhttp3:okhttp:${rootProject.ext.okhttpVersion}"
+    implementation "com.android.tools.build:gradle:${agpVersion}"
+    implementation "com.google.code.gson:gson:${gsonVersion}"
+    implementation "com.squareup.okhttp3:okhttp:${okhttpVersion}"
+
+    // Test dependencies
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.11.0'
 }
 
 gradlePlugin {
@@ -38,7 +55,7 @@ publishing {
     repositories {
         maven {
             name = 'local'
-            url = "${rootProject.buildDir}/repo"
+            url = "${project.buildDir}/repo"
         }
     }
 }
