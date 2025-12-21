@@ -1,0 +1,60 @@
+plugins {
+    id 'com.android.application'
+    id 'com.yourcompany.chart-a11y'
+}
+
+android {
+    namespace 'com.yourcompany.a11y.sample'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.yourcompany.a11y.sample"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+// Configure Chart A11y Plugin
+chartA11y {
+    configFile 'src/main/assets/chart_configs.json'
+    apiEndpoint = 'https://api.example.com/a11y'
+    apiKey = System.getenv('CHART_A11Y_API_KEY') ?: ''
+    locales 'zh-CN', 'en'
+    processLayouts = true
+    enableCache = true
+    cacheDir = file("${buildDir}/chart-a11y-cache")
+    timeout = 30L
+    concurrency = 4
+    failOnError = false
+}
+
+dependencies {
+    implementation project(':runtime')
+
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // MPAndroidChart for demo charts
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}

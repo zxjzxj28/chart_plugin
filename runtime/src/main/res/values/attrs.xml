@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Custom attributes for Chart Accessibility -->
+    <declare-styleable name="ChartAccessibility">
+        <!-- The unique identifier of the chart, used to reference accessibility descriptions -->
+        <attr name="a11yChartId" format="string" />
+
+        <!-- Whether the chart should be focusable for accessibility -->
+        <attr name="a11yFocusable" format="boolean" />
+
+        <!-- The type of accessibility description to use -->
+        <attr name="a11yDescType" format="enum">
+            <!-- Brief description (default) -->
+            <enum name="brief" value="0" />
+            <!-- Detailed description -->
+            <enum name="detailed" value="1" />
+        </attr>
+    </declare-styleable>
+</resources>

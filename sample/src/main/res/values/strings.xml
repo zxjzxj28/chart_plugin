@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Chart A11y Sample</string>
+    <string name="chart_sales_title">Quarterly Sales (XML-based)</string>
+    <string name="chart_user_growth_title">User Growth (Code-based)</string>
+    <string name="chart_market_share_title">Market Share (XML-based)</string>
+    <string name="chart_performance_title">Performance Radar (Builder)</string>
+</resources>

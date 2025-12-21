@@ -1,0 +1,44 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation "com.android.tools.build:gradle:${rootProject.ext.agpVersion}"
+    implementation "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
+    implementation "com.squareup.okhttp3:okhttp:${rootProject.ext.okhttpVersion}"
+}
+
+gradlePlugin {
+    plugins {
+        chartA11yPlugin {
+            id = 'com.yourcompany.chart-a11y'
+            implementationClass = 'com.yourcompany.a11y.ChartA11yPlugin'
+            displayName = 'Chart Accessibility Plugin'
+            description = 'Gradle plugin for generating chart accessibility descriptions'
+        }
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            artifactId = 'chart-a11y-plugin'
+            version = project.version
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = 'local'
+            url = "${rootProject.buildDir}/repo"
+        }
+    }
+}
