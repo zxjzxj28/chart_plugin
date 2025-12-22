@@ -1,9 +1,11 @@
 package com.yourcompany.a11y;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,10 +39,154 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
  */
 public class ChartA11y {
 
+    private static final String TAG = "ChartA11y";
     private static final String RESOURCE_PREFIX = "a11y_chart_";
+    private static final String A11Y_TAG_PREFIX = "a11y:";
 
     private ChartA11y() {
         // Utility class
+    }
+
+    /**
+     * Initialize a specific chart view configured with a11y attributes in XML.
+     * This method reads the chart configuration from android:tag and applies data point navigation.
+     *
+     * <p>Example usage:</p>
+     * <pre>
+     * // Initialize a specific chart by view
+     * ChartA11y.initializeFromXml(findViewById(R.id.barChart));
+     *
+     * // Or by resource ID
+     * ChartA11y.initializeFromXml(this, R.id.barChart);
+     * </pre>
+     *
+     * @param view the chart view to initialize
+     * @return true if the view was successfully initialized
+     */
+    public static boolean initializeFromXml(@NonNull View view) {
+        return initializeViewFromTag(view);
+    }
+
+    /**
+     * Initialize a specific chart view by resource ID.
+     *
+     * @param activity the activity containing the chart view
+     * @param viewId the resource ID of the chart view
+     * @return true if the view was successfully initialized
+     */
+    public static boolean initializeFromXml(@NonNull Activity activity, int viewId) {
+        View view = activity.findViewById(viewId);
+        if (view == null) {
+            Log.w(TAG, "View not found for ID: " + viewId);
+            return false;
+        }
+        return initializeViewFromTag(view);
+    }
+
+    /**
+     * Initialize all chart views configured with a11y attributes in an Activity.
+     * This method should be called in Activity.onCreate() after setContentView().
+     *
+     * <p>Example usage:</p>
+     * <pre>
+     * {@literal @}Override
+     * protected void onCreate(Bundle savedInstanceState) {
+     *     super.onCreate(savedInstanceState);
+     *     setContentView(R.layout.activity_main);
+     *
+     *     // Initialize all XML-configured charts with data point navigation
+     *     ChartA11y.initializeAllFromXml(this);
+     * }
+     * </pre>
+     *
+     * @param activity the activity containing chart views
+     * @return the number of views initialized
+     */
+    public static int initializeAllFromXml(@NonNull Activity activity) {
+        View rootView = activity.getWindow().getDecorView().getRootView();
+        return initializeAllFromXml(rootView);
+    }
+
+    /**
+     * Initialize all chart views configured with a11y attributes within a view hierarchy.
+     *
+     * @param rootView the root view to search within
+     * @return the number of views initialized
+     */
+    public static int initializeAllFromXml(@NonNull View rootView) {
+        int[] count = {0};
+        traverseViewHierarchy(rootView, view -> {
+            if (initializeViewFromTag(view)) {
+                count[0]++;
+            }
+        });
+        return count[0];
+    }
+
+    /**
+     * Check if a view has a11y configuration and initialize it if so.
+     *
+     * @param view the view to check
+     * @return true if the view was initialized
+     */
+    private static boolean initializeViewFromTag(@NonNull View view) {
+        Object tag = view.getTag();
+        if (!(tag instanceof String)) {
+            return false;
+        }
+
+        String tagStr = (String) tag;
+        if (!tagStr.startsWith(A11Y_TAG_PREFIX)) {
+            return false;
+        }
+
+        // Parse tag: "a11y:{chartId}:{descType}:{enableNavigation}"
+        String[] parts = tagStr.substring(A11Y_TAG_PREFIX.length()).split(":");
+        if (parts.length < 3) {
+            Log.w(TAG, "Invalid a11y tag format: " + tagStr);
+            return false;
+        }
+
+        String chartId = parts[0];
+        String descTypeStr = parts[1];
+        boolean enableNavigation = "true".equalsIgnoreCase(parts[2]);
+
+        if (!enableNavigation) {
+            return false;
+        }
+
+        // Determine description type
+        DescType descType = "detailed".equalsIgnoreCase(descTypeStr)
+                ? DescType.DETAILED : DescType.BRIEF;
+
+        // Apply data point navigation
+        with(view)
+                .chartId(chartId)
+                .descType(descType)
+                .enableDataPointNavigation(true)
+                .apply();
+
+        Log.d(TAG, "Initialized data point navigation for chart: " + chartId);
+        return true;
+    }
+
+    /**
+     * Traverse the view hierarchy and apply an action to each view.
+     */
+    private static void traverseViewHierarchy(@NonNull View view, @NonNull ViewAction action) {
+        action.apply(view);
+
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                traverseViewHierarchy(group.getChildAt(i), action);
+            }
+        }
+    }
+
+    /** Functional interface for view traversal */
+    private interface ViewAction {
+        void apply(View view);
     }
 
     /**

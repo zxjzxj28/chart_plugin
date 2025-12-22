@@ -46,6 +46,10 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
     private static final String A11Y_CHART_ID = "a11yChartId";
     private static final String A11Y_DESC_TYPE = "a11yDescType";
     private static final String A11Y_FOCUSABLE = "a11yFocusable";
+    private static final String A11Y_ENABLE_NAVIGATION = "a11yEnableNavigation";
+
+    /** Tag prefix for runtime initialization */
+    public static final String A11Y_TAG_PREFIX = "a11y:";
 
     @InputDirectory
     public abstract DirectoryProperty getLayoutDir();
@@ -168,6 +172,7 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
         String chartId = getAttributeValue(element, A11Y_CHART_ID);
         String descType = getAttributeValue(element, A11Y_DESC_TYPE);
         String focusable = getAttributeValue(element, A11Y_FOCUSABLE);
+        String enableNavigation = getAttributeValue(element, A11Y_ENABLE_NAVIGATION);
 
         if (chartId == null || chartId.isEmpty()) {
             return;
@@ -193,10 +198,19 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
         // Set importantForAccessibility
         element.setAttributeNS(ANDROID_NS, "android:importantForAccessibility", "yes");
 
+        // If navigation is enabled, save metadata in tag for runtime initialization
+        // Tag format: "a11y:{chartId}:{descType}:{enableNavigation}"
+        boolean navEnabled = "true".equalsIgnoreCase(enableNavigation);
+        if (navEnabled) {
+            String tagValue = A11Y_TAG_PREFIX + chartId + ":" + typeSuffix + ":true";
+            element.setAttributeNS(ANDROID_NS, "android:tag", tagValue);
+        }
+
         // Remove custom attributes
         removeAppAttribute(element, A11Y_CHART_ID);
         removeAppAttribute(element, A11Y_DESC_TYPE);
         removeAppAttribute(element, A11Y_FOCUSABLE);
+        removeAppAttribute(element, A11Y_ENABLE_NAVIGATION);
     }
 
     private String getAttributeValue(Element element, String attrName) {
