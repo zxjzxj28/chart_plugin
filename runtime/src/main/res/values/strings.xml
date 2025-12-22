@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Data point navigation action labels -->
+    <string name="a11y_action_next_data_point">下一个数据点</string>
+    <string name="a11y_action_previous_data_point">上一个数据点</string>
+</resources>

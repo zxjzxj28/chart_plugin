@@ -32,6 +32,10 @@
     <string name="a11y_chart_market_share_point_2">产品C，市场份额22%</string>
     <string name="a11y_chart_market_share_point_3">其他，市场份额15%</string>
 
+    <!-- Data point navigation action labels -->
+    <string name="a11y_action_next_data_point">下一个数据点</string>
+    <string name="a11y_action_previous_data_point">上一个数据点</string>
+
     <!-- Mock A11y Strings for performance_radar (Radar Chart) -->
     <string name="a11y_chart_performance_radar_brief">员工绩效评估雷达图，展示五个维度评分</string>
     <string name="a11y_chart_performance_radar_detailed">员工绩效评估雷达图，用于年度员工绩效综合评估。五个维度评分分别为：沟通能力85分，技术水平90分为最高分，团队协作78分为最低分，创新思维82分，执行力88分。整体表现均衡，技术水平突出。</string>
