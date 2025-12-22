@@ -5,6 +5,7 @@
       "id": "sales_quarterly",
       "type": "BAR",
       "title": "季度销售额",
+      "imagePath": "charts/sales_quarterly.png",
       "data": {
         "labels": ["Q1", "Q2", "Q3", "Q4"],
         "datasets": [
@@ -21,6 +22,7 @@
       "id": "user_growth",
       "type": "LINE",
       "title": "用户增长趋势",
+      "imagePath": "charts/user_growth.png",
       "data": {
         "labels": ["1月", "2月", "3月", "4月", "5月", "6月"],
         "datasets": [

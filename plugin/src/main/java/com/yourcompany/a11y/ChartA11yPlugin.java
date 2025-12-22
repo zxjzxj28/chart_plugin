@@ -73,6 +73,7 @@ public class ChartA11yPlugin implements Plugin<Project> {
                     task.getLocales().set(extension.getLocales());
                     task.getEnableCache().set(extension.getEnableCache());
                     task.getCacheDir().set(extension.getCacheDir());
+                    task.getImageBasePath().set(extension.getImageBasePath());
                     task.getApiTimeout().set(extension.getTimeout());
                     task.getConcurrency().set(extension.getConcurrency());
                     task.getFailOnError().set(extension.getFailOnError());

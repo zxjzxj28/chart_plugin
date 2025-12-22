@@ -71,6 +71,10 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
     @Input
     public abstract Property<Boolean> getFailOnError();
 
+    @Input
+    @Optional
+    public abstract Property<File> getImageBasePath();
+
     @OutputDirectory
     public abstract DirectoryProperty getOutputDir();
 
@@ -95,9 +99,12 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
         getLogger().lifecycle("Found {} chart configurations", charts.size());
 
         // Initialize services
+        File imageBasePath = getImageBasePath().getOrNull();
+
         CacheService cacheService = new CacheService(
                 getCacheDir().get(),
-                getEnableCache().get()
+                getEnableCache().get(),
+                imageBasePath
         );
 
         List<String> locales = getLocales().get();
@@ -106,7 +113,8 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
                 getApiKey().getOrElse(""),
                 getApiTimeout().get(),
                 getConcurrency().get(),
-                locales
+                locales,
+                imageBasePath
         );
 
         // Process charts

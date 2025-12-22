@@ -9,6 +9,7 @@ public class ChartConfig {
     private String title;
     private ChartData data;
     private String context;
+    private String imagePath;
 
     public ChartConfig() {
     }
@@ -57,6 +58,23 @@ public class ChartConfig {
         this.context = context;
     }
 
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    /**
+     * Check if this chart has an associated image.
+     *
+     * @return true if imagePath is set
+     */
+    public boolean hasImage() {
+        return imagePath != null && !imagePath.isEmpty();
+    }
+
     /**
      * Convert chart ID to a valid resource name.
      * - Convert to lowercase
@@ -85,6 +103,7 @@ public class ChartConfig {
                 ", title='" + title + '\'' +
                 ", data=" + data +
                 ", context='" + context + '\'' +
+                ", imagePath='" + imagePath + '\'' +
                 '}';
     }
 }
