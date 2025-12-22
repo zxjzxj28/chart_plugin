@@ -1,11 +1,14 @@
+// A11yDelegate.java - 修复版
+
 package com.yourcompany.a11y;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityNodeInfo;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,36 +18,23 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Custom AccessibilityDelegate for chart views.
- *
- * Features:
- * - Sets roleDescription for the chart type
- * - Provides data point navigation via custom actions (scroll forward/backward)
- * - Reports state description (e.g., "item 2 of 4")
- *
- * User interaction with TalkBack:
- * - Swipe right with two fingers or use "Scroll forward" action: Next data point
- * - Swipe left with two fingers or use "Scroll backward" action: Previous data point
- */
 public class A11yDelegate extends AccessibilityDelegateCompat {
 
-    // Use standard scroll actions for better TalkBack compatibility
-    // These are recognized by TalkBack and appear in the actions menu
-    private static final int ACTION_NEXT_DATA_POINT = AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD;
-    private static final int ACTION_PREVIOUS_DATA_POINT = AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD;
+    private static final String TAG = "A11yDelegate";
+
+    // 使用自定义动作 ID（必须大于 0x10000000）
+    private static final int ACTION_ID_NEXT = 0x10000001;
+    private static final int ACTION_ID_PREVIOUS = 0x10000002;
 
     private final String chartId;
     private final String roleDescription;
     private final List<String> dataPointDescriptions;
     private int currentDataPointIndex = 0;
 
-    /**
-     * Create an accessibility delegate for a chart.
-     *
-     * @param chartId the chart identifier
-     * @param roleDescription the role description (e.g., "bar chart")
-     */
+    // 自定义动作标签（可本地化）
+    private String actionLabelNext = "下一个数据点";
+    private String actionLabelPrevious = "上一个数据点";
+
     public A11yDelegate(@NonNull String chartId, @Nullable String roleDescription) {
         this.chartId = chartId;
         this.roleDescription = roleDescription;
@@ -52,145 +42,159 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     }
 
     /**
-     * Load data point descriptions from resources.
-     *
-     * @param context the context
-     * @param resourcePrefix the resource name prefix (e.g., "a11y_chart_sales_quarterly_point_")
+     * 设置动作标签（支持本地化）
      */
+    public void setActionLabels(@NonNull String next, @NonNull String previous) {
+        this.actionLabelNext = next;
+        this.actionLabelPrevious = previous;
+    }
+
     public void loadDataPoints(@NonNull Context context, @NonNull String resourcePrefix) {
         dataPointDescriptions.clear();
         Resources resources = context.getResources();
         String packageName = context.getPackageName();
 
-        // Try to load data points (point_0, point_1, etc.)
-        for (int i = 0; i < 100; i++) { // Reasonable limit
+        for (int i = 0; i < 100; i++) {
             String resourceName = resourcePrefix + i;
             int resId = resources.getIdentifier(resourceName, "string", packageName);
             if (resId == 0) {
-                break; // No more data points
+                break;
             }
             dataPointDescriptions.add(resources.getString(resId));
         }
+
+        // 调试日志
+        Log.d(TAG, "Loaded " + dataPointDescriptions.size() + " data points for chart: " + chartId);
+    }
+
+    /**
+     * 直接设置数据点描述（用于动态数据或测试）
+     */
+    public void setDataPoints(@NonNull List<String> descriptions) {
+        dataPointDescriptions.clear();
+        dataPointDescriptions.addAll(descriptions);
+        currentDataPointIndex = 0;
+        Log.d(TAG, "Set " + dataPointDescriptions.size() + " data points for chart: " + chartId);
     }
 
     @Override
     public void onInitializeAccessibilityNodeInfo(@NonNull View host,
-                                                   @NonNull AccessibilityNodeInfoCompat info) {
+                                                  @NonNull AccessibilityNodeInfoCompat info) {
         super.onInitializeAccessibilityNodeInfo(host, info);
 
-        // Set role description
+        // 设置角色描述
         if (roleDescription != null && !roleDescription.isEmpty()) {
             info.setRoleDescription(roleDescription);
         }
 
-        // Set class name for better TalkBack support
-        info.setClassName("android.widget.ImageView");
-
-        // Add scroll actions for data point navigation if available
+        // 关键修复：添加自定义动作
         if (!dataPointDescriptions.isEmpty()) {
-            // Mark as scrollable so TalkBack shows scroll actions
+            // 添加"下一个数据点"动作
+            if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
+                AccessibilityNodeInfoCompat.AccessibilityActionCompat nextAction =
+                        new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                                ACTION_ID_NEXT, actionLabelNext);
+                info.addAction(nextAction);
+            }
+
+            // 添加"上一个数据点"动作
+            if (currentDataPointIndex > 0) {
+                AccessibilityNodeInfoCompat.AccessibilityActionCompat prevAction =
+                        new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                                ACTION_ID_PREVIOUS, actionLabelPrevious);
+                info.addAction(prevAction);
+            }
+
+            // 同时保留标准滚动动作（双指滑动支持）
             info.setScrollable(true);
-
-            // Set collection info to indicate this is a list-like structure
-            info.setCollectionInfo(AccessibilityNodeInfoCompat.CollectionInfoCompat.obtain(
-                    dataPointDescriptions.size(), 1, false));
-
-            // Add scroll forward action (next data point)
             if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
                 info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_FORWARD);
             }
-
-            // Add scroll backward action (previous data point)
             if (currentDataPointIndex > 0) {
                 info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_BACKWARD);
             }
 
-            // Set state description to show current position
+            // 设置状态描述
             String stateDesc = getStateDescription();
-            if (!stateDesc.isEmpty()) {
-                info.setStateDescription(stateDesc);
-            }
+            info.setStateDescription(stateDesc);
 
-            // Also set content description to include current data point
+            // 设置 CollectionInfo（帮助 TalkBack 理解这是列表结构）
+            info.setCollectionInfo(AccessibilityNodeInfoCompat.CollectionInfoCompat.obtain(
+                    dataPointDescriptions.size(), 1, false,
+                    AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_SINGLE));
+
+            // 更新 contentDescription 包含当前数据点
             String currentDesc = getCurrentDataPointDescription();
             if (currentDesc != null) {
                 CharSequence existingDesc = info.getContentDescription();
                 if (existingDesc != null && existingDesc.length() > 0) {
-                    info.setContentDescription(existingDesc + ". " + currentDesc);
+                    info.setContentDescription(existingDesc + "。当前：" + currentDesc);
+                } else {
+                    info.setContentDescription("图表。当前：" + currentDesc);
                 }
             }
+
+            Log.d(TAG, "Node info initialized: " + dataPointDescriptions.size() +
+                    " points, current=" + currentDataPointIndex);
         }
     }
 
     @Override
     public boolean performAccessibilityAction(@NonNull View host, int action,
-                                               @Nullable Bundle args) {
+                                              @Nullable Bundle args) {
+        Log.d(TAG, "performAccessibilityAction: action=" + action);
+
         switch (action) {
+            case ACTION_ID_NEXT:
             case AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD:
                 if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
                     currentDataPointIndex++;
                     announceDataPoint(host);
-                    // Notify that the node info has changed so TalkBack updates available actions
                     notifyNodeChanged(host);
                     return true;
                 }
-                break;
+                return false;
 
+            case ACTION_ID_PREVIOUS:
             case AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD:
                 if (currentDataPointIndex > 0) {
                     currentDataPointIndex--;
                     announceDataPoint(host);
-                    // Notify that the node info has changed so TalkBack updates available actions
                     notifyNodeChanged(host);
                     return true;
                 }
-                break;
+                return false;
         }
 
         return super.performAccessibilityAction(host, action, args);
     }
 
-    /**
-     * Notify accessibility services that the node info has changed.
-     * This updates the available actions in TalkBack's menu.
-     */
     private void notifyNodeChanged(View host) {
-        host.post(() -> {
-            host.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
-        });
-    }
+        // 通知节点信息已变化
+        host.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
 
-    @Override
-    public void onPopulateAccessibilityEvent(@NonNull View host,
-                                              @NonNull AccessibilityEvent event) {
-        super.onPopulateAccessibilityEvent(host, event);
-
-        // Add state description when data points are available
-        if (!dataPointDescriptions.isEmpty() && event.getEventType() ==
-                AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
-            String stateDesc = getStateDescription();
-            event.getText().add(stateDesc);
+        // 重新获取焦点以触发状态更新
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            host.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
         }
     }
 
-    /**
-     * Get the state description showing current position in data points.
-     *
-     * @return state description string
-     */
+    private void announceDataPoint(View host) {
+        String description = getCurrentDataPointDescription();
+        if (description != null) {
+            String announcement = description + "。" + getStateDescription();
+            host.announceForAccessibility(announcement);
+        }
+    }
+
     public String getStateDescription() {
         if (dataPointDescriptions.isEmpty()) {
             return "";
         }
-        return String.format("Item %d of %d",
+        return String.format("第 %d 项，共 %d 项",
                 currentDataPointIndex + 1, dataPointDescriptions.size());
     }
 
-    /**
-     * Get the current data point description.
-     *
-     * @return current data point description, or null if none
-     */
     @Nullable
     public String getCurrentDataPointDescription() {
         if (dataPointDescriptions.isEmpty() ||
@@ -200,37 +204,21 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
         return dataPointDescriptions.get(currentDataPointIndex);
     }
 
-    /**
-     * Navigate to a specific data point.
-     *
-     * @param index the data point index
-     */
     public void navigateToDataPoint(int index) {
         if (index >= 0 && index < dataPointDescriptions.size()) {
             currentDataPointIndex = index;
         }
     }
 
-    /**
-     * Reset navigation to the first data point.
-     */
     public void resetNavigation() {
         currentDataPointIndex = 0;
     }
 
-    /**
-     * Get the number of data points.
-     *
-     * @return data point count
-     */
     public int getDataPointCount() {
         return dataPointDescriptions.size();
     }
 
-    private void announceDataPoint(View host) {
-        String description = getCurrentDataPointDescription();
-        if (description != null) {
-            host.announceForAccessibility(description + ". " + getStateDescription());
-        }
+    public int getCurrentIndex() {
+        return currentDataPointIndex;
     }
 }

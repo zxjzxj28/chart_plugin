@@ -2,6 +2,7 @@ package com.yourcompany.a11y;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -168,6 +169,8 @@ public class ChartA11y {
         /**
          * Apply the accessibility configuration to the view.
          */
+        // ChartA11y.java 中 apply() 方法的关键修复
+
         public void apply() {
             if (chartId == null || chartId.isEmpty()) {
                 throw new IllegalStateException("chartId must be set");
@@ -178,29 +181,37 @@ public class ChartA11y {
             String packageName = context.getPackageName();
             String resourceName = toResourceName(chartId);
 
-            // Build resource name
+            // 设置 contentDescription
             String descResourceName = RESOURCE_PREFIX + resourceName + "_" + descType.getSuffix();
             int descResId = resources.getIdentifier(descResourceName, "string", packageName);
-
-            // Set content description
             if (descResId != 0) {
                 view.setContentDescription(resources.getString(descResId));
             }
 
-            // Set focusable
+            // 关键修复：确保 View 的无障碍属性正确配置
             view.setFocusable(focusable);
+            view.setClickable(true);  // 添加这行！
+            view.setLongClickable(true);  // 添加这行！
 
-            // Set important for accessibility
             ViewCompat.setImportantForAccessibility(view,
                     ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
 
-            // Create and set accessibility delegate
+            // 设置 LiveRegion 以便状态变化时自动播报
+            ViewCompat.setAccessibilityLiveRegion(view,
+                    ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE);
+
+            // 创建并配置 delegate
             A11yDelegate delegate = new A11yDelegate(chartId, roleDescription);
 
-            // Load data point descriptions if enabled
             if (enableDataPointNavigation) {
                 String dataPointPrefix = RESOURCE_PREFIX + resourceName + "_point_";
                 delegate.loadDataPoints(context, dataPointPrefix);
+
+                // 如果资源加载失败，提供调试警告
+                if (delegate.getDataPointCount() == 0) {
+                    Log.w("ChartA11y", "No data points loaded for chart: " + chartId +
+                            ". Check resource naming: " + dataPointPrefix + "0, " + dataPointPrefix + "1, ...");
+                }
             }
 
             ViewCompat.setAccessibilityDelegate(view, delegate);
