@@ -12,8 +12,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,12 +42,19 @@ public class A11yApiService {
     private final ExecutorService executor;
     private final Gson gson;
     private final List<String> locales;
+    private final File imageBasePath;
 
     public A11yApiService(String apiEndpoint, String apiKey, long timeoutSeconds,
                           int concurrency, List<String> locales) {
+        this(apiEndpoint, apiKey, timeoutSeconds, concurrency, locales, null);
+    }
+
+    public A11yApiService(String apiEndpoint, String apiKey, long timeoutSeconds,
+                          int concurrency, List<String> locales, File imageBasePath) {
         this.apiEndpoint = apiEndpoint;
         this.apiKey = apiKey;
         this.locales = locales != null ? locales : List.of("en");
+        this.imageBasePath = imageBasePath;
         this.gson = new GsonBuilder().create();
 
         this.client = new OkHttpClient.Builder()
@@ -132,6 +142,16 @@ public class A11yApiService {
         chart.addProperty("type", config.getType());
         chart.addProperty("title", config.getTitle());
         chart.add("data", gson.toJsonTree(config.getData()));
+
+        // Add image data if available
+        if (config.hasImage()) {
+            String imageBase64 = readImageAsBase64(config.getImagePath());
+            if (imageBase64 != null) {
+                chart.addProperty("image", imageBase64);
+                chart.addProperty("imageMimeType", getMimeType(config.getImagePath()));
+            }
+        }
+
         root.add("chart", chart);
 
         // Locales
@@ -145,6 +165,83 @@ public class A11yApiService {
         root.add("options", options);
 
         return gson.toJson(root);
+    }
+
+    /**
+     * Read an image file and encode it as Base64.
+     *
+     * @param imagePath the path to the image file (relative to imageBasePath or absolute)
+     * @return Base64 encoded string, or null if the file cannot be read
+     */
+    private String readImageAsBase64(String imagePath) {
+        if (imagePath == null || imagePath.isEmpty()) {
+            return null;
+        }
+
+        File imageFile = resolveImageFile(imagePath);
+        if (imageFile == null || !imageFile.exists() || !imageFile.isFile()) {
+            return null;
+        }
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
+            return Base64.getEncoder().encodeToString(imageBytes);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolve the image file path.
+     * If the path is absolute, use it directly.
+     * If the path is relative, resolve it against the imageBasePath.
+     *
+     * @param imagePath the image path from config
+     * @return the resolved File object
+     */
+    private File resolveImageFile(String imagePath) {
+        if (imagePath == null || imagePath.isEmpty()) {
+            return null;
+        }
+
+        File file = new File(imagePath);
+        if (file.isAbsolute()) {
+            return file;
+        }
+
+        if (imageBasePath != null) {
+            return new File(imageBasePath, imagePath);
+        }
+
+        return file;
+    }
+
+    /**
+     * Get the MIME type based on file extension.
+     *
+     * @param imagePath the image file path
+     * @return the MIME type string
+     */
+    private String getMimeType(String imagePath) {
+        if (imagePath == null) {
+            return "application/octet-stream";
+        }
+
+        String lowerPath = imagePath.toLowerCase();
+        if (lowerPath.endsWith(".png")) {
+            return "image/png";
+        } else if (lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) {
+            return "image/jpeg";
+        } else if (lowerPath.endsWith(".gif")) {
+            return "image/gif";
+        } else if (lowerPath.endsWith(".webp")) {
+            return "image/webp";
+        } else if (lowerPath.endsWith(".bmp")) {
+            return "image/bmp";
+        } else if (lowerPath.endsWith(".svg")) {
+            return "image/svg+xml";
+        }
+        return "application/octet-stream";
     }
 
     private A11yResult executeRequest(String requestBody) throws IOException {
