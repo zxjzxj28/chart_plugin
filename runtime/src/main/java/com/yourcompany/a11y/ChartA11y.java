@@ -48,7 +48,43 @@ public class ChartA11y {
     }
 
     /**
-     * Initialize all chart views configured with a11y attributes in XML layouts.
+     * Initialize a specific chart view configured with a11y attributes in XML.
+     * This method reads the chart configuration from android:tag and applies data point navigation.
+     *
+     * <p>Example usage:</p>
+     * <pre>
+     * // Initialize a specific chart by view
+     * ChartA11y.initializeFromXml(findViewById(R.id.barChart));
+     *
+     * // Or by resource ID
+     * ChartA11y.initializeFromXml(this, R.id.barChart);
+     * </pre>
+     *
+     * @param view the chart view to initialize
+     * @return true if the view was successfully initialized
+     */
+    public static boolean initializeFromXml(@NonNull View view) {
+        return initializeViewFromTag(view);
+    }
+
+    /**
+     * Initialize a specific chart view by resource ID.
+     *
+     * @param activity the activity containing the chart view
+     * @param viewId the resource ID of the chart view
+     * @return true if the view was successfully initialized
+     */
+    public static boolean initializeFromXml(@NonNull Activity activity, int viewId) {
+        View view = activity.findViewById(viewId);
+        if (view == null) {
+            Log.w(TAG, "View not found for ID: " + viewId);
+            return false;
+        }
+        return initializeViewFromTag(view);
+    }
+
+    /**
+     * Initialize all chart views configured with a11y attributes in an Activity.
      * This method should be called in Activity.onCreate() after setContentView().
      *
      * <p>Example usage:</p>
@@ -59,16 +95,16 @@ public class ChartA11y {
      *     setContentView(R.layout.activity_main);
      *
      *     // Initialize all XML-configured charts with data point navigation
-     *     ChartA11y.initializeFromXml(this);
+     *     ChartA11y.initializeAllFromXml(this);
      * }
      * </pre>
      *
      * @param activity the activity containing chart views
      * @return the number of views initialized
      */
-    public static int initializeFromXml(@NonNull Activity activity) {
+    public static int initializeAllFromXml(@NonNull Activity activity) {
         View rootView = activity.getWindow().getDecorView().getRootView();
-        return initializeFromXml(rootView);
+        return initializeAllFromXml(rootView);
     }
 
     /**
@@ -77,7 +113,7 @@ public class ChartA11y {
      * @param rootView the root view to search within
      * @return the number of views initialized
      */
-    public static int initializeFromXml(@NonNull View rootView) {
+    public static int initializeAllFromXml(@NonNull View rootView) {
         int[] count = {0};
         traverseViewHierarchy(rootView, view -> {
             if (initializeViewFromTag(view)) {

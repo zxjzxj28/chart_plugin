@@ -46,15 +46,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize data point navigation for all XML-configured charts
-        // This enables swipe navigation for charts with app:a11yEnableNavigation="true"
-        int initializedCount = ChartA11y.initializeFromXml(this);
-        android.util.Log.d("MainActivity", "Initialized " + initializedCount + " charts from XML");
-
         setupBarChart();
         setupLineChart();
         setupPieChart();
         setupRadarChart();
+
+        // Initialize data point navigation for specific XML-configured charts
+        // Option 1: By resource ID (recommended)
+        ChartA11y.initializeFromXml(this, R.id.barChart);
+        ChartA11y.initializeFromXml(this, R.id.pieChart);
+
+        // Option 2: By view reference
+        // ChartA11y.initializeFromXml(findViewById(R.id.barChart));
+
+        // Option 3: Initialize all at once
+        // ChartA11y.initializeAllFromXml(this);
     }
 
     /**
