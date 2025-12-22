@@ -15,5 +15,8 @@
             <!-- Detailed description -->
             <enum name="detailed" value="1" />
         </attr>
+
+        <!-- Whether to enable data point navigation (requires runtime initialization) -->
+        <attr name="a11yEnableNavigation" format="boolean" />
     </declare-styleable>
 </resources>

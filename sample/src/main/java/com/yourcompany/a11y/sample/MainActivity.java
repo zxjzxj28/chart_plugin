@@ -34,9 +34,9 @@ import java.util.List;
  * Sample activity demonstrating Chart Accessibility features.
  *
  * This activity shows four different charts:
- * 1. Bar Chart - accessibility configured via XML attributes
+ * 1. Bar Chart - accessibility configured via XML attributes (with data point navigation)
  * 2. Line Chart - accessibility configured via code (simple API)
- * 3. Pie Chart - accessibility configured via XML attributes
+ * 3. Pie Chart - accessibility configured via XML attributes (with data point navigation)
  * 4. Radar Chart - accessibility configured via code (Builder pattern)
  */
 public class MainActivity extends AppCompatActivity {
@@ -45,6 +45,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Initialize data point navigation for all XML-configured charts
+        // This enables swipe navigation for charts with app:a11yEnableNavigation="true"
+        int initializedCount = ChartA11y.initializeFromXml(this);
+        android.util.Log.d("MainActivity", "Initialized " + initializedCount + " charts from XML");
 
         setupBarChart();
         setupLineChart();
