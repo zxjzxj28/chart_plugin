@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Runtime library for Chart Accessibility -->
+
+    <application>
+        <!--
+        ContentProvider for automatic chart accessibility initialization.
+        This provider is initialized before Application.onCreate() and
+        registers activity lifecycle callbacks to auto-initialize charts.
+
+        To disable auto-initialization, add this to your app's manifest:
+        <meta-data
+            android:name="com.yourcompany.a11y.AUTO_INIT_DISABLED"
+            android:value="true" />
+        -->
+        <provider
+            android:name="com.yourcompany.a11y.ChartA11yInitializer"
+            android:authorities="${applicationId}.chart_a11y_initializer"
+            android:exported="false"
+            android:initOrder="100" />
+    </application>
 </manifest>

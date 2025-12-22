@@ -15,26 +15,50 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 /**
  * Chart Accessibility SDK entry point.
  *
- * Provides easy-to-use APIs for applying accessibility features to chart views.
+ * <p>Provides easy-to-use APIs for applying accessibility features to chart views.</p>
  *
- * <h3>Simple Usage:</h3>
+ * <h3>Zero-Code XML Configuration (Recommended):</h3>
+ * <p>Simply add a11y attributes to your chart views in XML - no code needed!</p>
  * <pre>
- * ChartA11y.apply(view, "chart_id");
+ * &lt;com.github.mikephil.charting.charts.BarChart
+ *     android:id="@+id/barChart"
+ *     android:layout_width="match_parent"
+ *     android:layout_height="300dp"
+ *     app:a11yChartId="sales_quarterly"
+ *     app:a11yDescType="detailed"
+ *     app:a11yFocusable="true"
+ *     app:a11yEnableNavigation="true" /&gt;
+ * </pre>
+ * <p>Charts with {@code app:a11yEnableNavigation="true"} will automatically have
+ * data point navigation enabled when the activity is resumed.</p>
+ *
+ * <h3>Manual Initialization (Optional):</h3>
+ * <p>If you disabled auto-initialization or need more control:</p>
+ * <pre>
+ * // Initialize all XML-configured charts
+ * ChartA11y.initializeAllFromXml(this);
+ *
+ * // Or initialize a specific chart
+ * ChartA11y.initializeFromXml(this, R.id.barChart);
  * </pre>
  *
- * <h3>With Description Type:</h3>
- * <pre>
- * ChartA11y.apply(view, "chart_id", DescType.DETAILED);
- * </pre>
- *
- * <h3>Builder Pattern:</h3>
+ * <h3>Programmatic Configuration:</h3>
  * <pre>
  * ChartA11y.with(view)
  *     .chartId("chart_id")
  *     .descType(DescType.DETAILED)
  *     .focusable(true)
  *     .roleDescription("柱状图")
+ *     .enableDataPointNavigation(true)
  *     .apply();
+ * </pre>
+ *
+ * <h3>Disabling Auto-Initialization:</h3>
+ * <p>Add this meta-data to your AndroidManifest.xml:</p>
+ * <pre>
+ * &lt;meta-data
+ *     android:name="com.yourcompany.a11y.AUTO_INIT_DISABLED"
+ *     android:value="true" /&gt;
  * </pre>
  */
 public class ChartA11y {
@@ -45,6 +69,15 @@ public class ChartA11y {
 
     private ChartA11y() {
         // Utility class
+    }
+
+    /**
+     * Check if automatic initialization is enabled and running.
+     *
+     * @return true if auto-initialization is active
+     */
+    public static boolean isAutoInitEnabled() {
+        return ChartA11yInitializer.isInitialized();
     }
 
     /**
