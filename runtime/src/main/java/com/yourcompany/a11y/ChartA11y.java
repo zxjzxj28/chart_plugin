@@ -1,8 +1,10 @@
 package com.yourcompany.a11y;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -106,6 +108,7 @@ public class ChartA11y {
         private boolean focusable = true;
         private String roleDescription;
         private boolean enableDataPointNavigation = true;
+        private boolean useVirtualNodes = true; // Default to virtual nodes for gesture support
 
         Builder(View view) {
             this.view = view;
@@ -167,10 +170,25 @@ public class ChartA11y {
         }
 
         /**
+         * Use virtual nodes for data point navigation.
+         *
+         * When enabled (default), each data point becomes a virtual accessibility node,
+         * allowing TalkBack single-finger swipe gestures to navigate between data points.
+         *
+         * When disabled, uses scroll actions which require two-finger swipe gestures.
+         *
+         * @param useVirtual true to use virtual nodes (single-finger swipe support)
+         * @return this builder
+         */
+        public Builder useVirtualNodes(boolean useVirtual) {
+            this.useVirtualNodes = useVirtual;
+            return this;
+        }
+
+        /**
          * Apply the accessibility configuration to the view.
          */
-        // ChartA11y.java 中 apply() 方法的关键修复
-
+        @SuppressLint("ClickableViewAccessibility")
         public void apply() {
             if (chartId == null || chartId.isEmpty()) {
                 throw new IllegalStateException("chartId must be set");
@@ -188,10 +206,10 @@ public class ChartA11y {
                 view.setContentDescription(resources.getString(descResId));
             }
 
-            // 关键修复：确保 View 的无障碍属性正确配置
+            // 确保 View 的无障碍属性正确配置
             view.setFocusable(focusable);
-            view.setClickable(true);  // 添加这行！
-            view.setLongClickable(true);  // 添加这行！
+            view.setClickable(true);
+            view.setLongClickable(true);
 
             ViewCompat.setImportantForAccessibility(view,
                     ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -200,21 +218,58 @@ public class ChartA11y {
             ViewCompat.setAccessibilityLiveRegion(view,
                     ViewCompat.ACCESSIBILITY_LIVE_REGION_POLITE);
 
-            // 创建并配置 delegate
-            A11yDelegate delegate = new A11yDelegate(chartId, roleDescription);
+            String dataPointPrefix = RESOURCE_PREFIX + resourceName + "_point_";
 
-            if (enableDataPointNavigation) {
-                String dataPointPrefix = RESOURCE_PREFIX + resourceName + "_point_";
+            if (enableDataPointNavigation && useVirtualNodes) {
+                // 使用 ExploreByTouchHelper 实现虚拟节点导航
+                // 这支持 TalkBack 单指滑动手势在数据点之间导航
+                final ChartExploreByTouchHelper touchHelper =
+                        new ChartExploreByTouchHelper(view, chartId, roleDescription);
+                touchHelper.loadDataPoints(context, dataPointPrefix);
+
+                if (touchHelper.getDataPointCount() == 0) {
+                    Log.w("ChartA11y", "No data points loaded for chart: " + chartId +
+                            ". Check resource naming: " + dataPointPrefix + "0, " + dataPointPrefix + "1, ...");
+                } else {
+                    Log.d("ChartA11y", "Using virtual nodes for " + touchHelper.getDataPointCount() +
+                            " data points. Single-finger swipe enabled.");
+                }
+
+                ViewCompat.setAccessibilityDelegate(view, touchHelper);
+
+                // 设置触摸监听器以支持触摸探索
+                view.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        return touchHelper.dispatchHoverEvent(event);
+                    }
+                });
+
+                // 在布局完成后刷新边界
+                view.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                    @Override
+                    public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                               int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                        touchHelper.refreshAccessibilityInfo();
+                    }
+                });
+
+            } else if (enableDataPointNavigation) {
+                // 使用传统的 A11yDelegate（需要两指滑动或菜单操作）
+                A11yDelegate delegate = new A11yDelegate(chartId, roleDescription);
                 delegate.loadDataPoints(context, dataPointPrefix);
 
-                // 如果资源加载失败，提供调试警告
                 if (delegate.getDataPointCount() == 0) {
                     Log.w("ChartA11y", "No data points loaded for chart: " + chartId +
                             ". Check resource naming: " + dataPointPrefix + "0, " + dataPointPrefix + "1, ...");
                 }
-            }
 
-            ViewCompat.setAccessibilityDelegate(view, delegate);
+                ViewCompat.setAccessibilityDelegate(view, delegate);
+            } else {
+                // 仅设置基本的角色描述
+                A11yDelegate delegate = new A11yDelegate(chartId, roleDescription);
+                ViewCompat.setAccessibilityDelegate(view, delegate);
+            }
         }
     }
 }
