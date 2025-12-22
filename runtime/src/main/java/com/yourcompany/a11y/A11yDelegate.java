@@ -20,13 +20,19 @@ import java.util.List;
  *
  * Features:
  * - Sets roleDescription for the chart type
- * - Provides data point navigation via custom actions
+ * - Provides data point navigation via custom actions (scroll forward/backward)
  * - Reports state description (e.g., "item 2 of 4")
+ *
+ * User interaction with TalkBack:
+ * - Swipe right with two fingers or use "Scroll forward" action: Next data point
+ * - Swipe left with two fingers or use "Scroll backward" action: Previous data point
  */
 public class A11yDelegate extends AccessibilityDelegateCompat {
 
-    private static final int ACTION_NEXT_DATA_POINT = 0x10001;
-    private static final int ACTION_PREVIOUS_DATA_POINT = 0x10002;
+    // Use standard scroll actions for better TalkBack compatibility
+    // These are recognized by TalkBack and appear in the actions menu
+    private static final int ACTION_NEXT_DATA_POINT = AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD;
+    private static final int ACTION_PREVIOUS_DATA_POINT = AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD;
 
     private final String chartId;
     private final String roleDescription;
@@ -80,37 +86,38 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
         // Set class name for better TalkBack support
         info.setClassName("android.widget.ImageView");
 
-        // Add custom actions for data point navigation if available
+        // Add scroll actions for data point navigation if available
         if (!dataPointDescriptions.isEmpty()) {
-            Context context = host.getContext();
-            Resources resources = context.getResources();
-            String packageName = context.getPackageName();
+            // Mark as scrollable so TalkBack shows scroll actions
+            info.setScrollable(true);
 
-            // Get localized action labels
-            int nextLabelResId = resources.getIdentifier(
-                    "a11y_action_next_data_point", "string", packageName);
-            int prevLabelResId = resources.getIdentifier(
-                    "a11y_action_previous_data_point", "string", packageName);
+            // Set collection info to indicate this is a list-like structure
+            info.setCollectionInfo(AccessibilityNodeInfoCompat.CollectionInfoCompat.obtain(
+                    dataPointDescriptions.size(), 1, false));
 
-            String nextLabel = nextLabelResId != 0 ?
-                    resources.getString(nextLabelResId) : "Next data point";
-            String prevLabel = prevLabelResId != 0 ?
-                    resources.getString(prevLabelResId) : "Previous data point";
-
-            // Add "Next data point" action
+            // Add scroll forward action (next data point)
             if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
-                AccessibilityNodeInfoCompat.AccessibilityActionCompat nextAction =
-                        new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
-                                ACTION_NEXT_DATA_POINT, nextLabel);
-                info.addAction(nextAction);
+                info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_FORWARD);
             }
 
-            // Add "Previous data point" action
+            // Add scroll backward action (previous data point)
             if (currentDataPointIndex > 0) {
-                AccessibilityNodeInfoCompat.AccessibilityActionCompat prevAction =
-                        new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
-                                ACTION_PREVIOUS_DATA_POINT, prevLabel);
-                info.addAction(prevAction);
+                info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_BACKWARD);
+            }
+
+            // Set state description to show current position
+            String stateDesc = getStateDescription();
+            if (!stateDesc.isEmpty()) {
+                info.setStateDescription(stateDesc);
+            }
+
+            // Also set content description to include current data point
+            String currentDesc = getCurrentDataPointDescription();
+            if (currentDesc != null) {
+                CharSequence existingDesc = info.getContentDescription();
+                if (existingDesc != null && existingDesc.length() > 0) {
+                    info.setContentDescription(existingDesc + ". " + currentDesc);
+                }
             }
         }
     }
@@ -119,24 +126,38 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     public boolean performAccessibilityAction(@NonNull View host, int action,
                                                @Nullable Bundle args) {
         switch (action) {
-            case ACTION_NEXT_DATA_POINT:
+            case AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD:
                 if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
                     currentDataPointIndex++;
                     announceDataPoint(host);
+                    // Notify that the node info has changed so TalkBack updates available actions
+                    notifyNodeChanged(host);
                     return true;
                 }
                 break;
 
-            case ACTION_PREVIOUS_DATA_POINT:
+            case AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD:
                 if (currentDataPointIndex > 0) {
                     currentDataPointIndex--;
                     announceDataPoint(host);
+                    // Notify that the node info has changed so TalkBack updates available actions
+                    notifyNodeChanged(host);
                     return true;
                 }
                 break;
         }
 
         return super.performAccessibilityAction(host, action, args);
+    }
+
+    /**
+     * Notify accessibility services that the node info has changed.
+     * This updates the available actions in TalkBack's menu.
+     */
+    private void notifyNodeChanged(View host) {
+        host.post(() -> {
+            host.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
+        });
     }
 
     @Override
