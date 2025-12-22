@@ -82,11 +82,26 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
 
         // Add custom actions for data point navigation if available
         if (!dataPointDescriptions.isEmpty()) {
+            Context context = host.getContext();
+            Resources resources = context.getResources();
+            String packageName = context.getPackageName();
+
+            // Get localized action labels
+            int nextLabelResId = resources.getIdentifier(
+                    "a11y_action_next_data_point", "string", packageName);
+            int prevLabelResId = resources.getIdentifier(
+                    "a11y_action_previous_data_point", "string", packageName);
+
+            String nextLabel = nextLabelResId != 0 ?
+                    resources.getString(nextLabelResId) : "Next data point";
+            String prevLabel = prevLabelResId != 0 ?
+                    resources.getString(prevLabelResId) : "Previous data point";
+
             // Add "Next data point" action
             if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
                 AccessibilityNodeInfoCompat.AccessibilityActionCompat nextAction =
                         new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
-                                ACTION_NEXT_DATA_POINT, "Next data point");
+                                ACTION_NEXT_DATA_POINT, nextLabel);
                 info.addAction(nextAction);
             }
 
@@ -94,7 +109,7 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
             if (currentDataPointIndex > 0) {
                 AccessibilityNodeInfoCompat.AccessibilityActionCompat prevAction =
                         new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
-                                ACTION_PREVIOUS_DATA_POINT, "Previous data point");
+                                ACTION_PREVIOUS_DATA_POINT, prevLabel);
                 info.addAction(prevAction);
             }
         }
