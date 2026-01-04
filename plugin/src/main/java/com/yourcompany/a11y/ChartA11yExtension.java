@@ -1,9 +1,7 @@
 package com.yourcompany.a11y;
 
 import org.gradle.api.Project;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.file.RegularFileProperty;
 
 import java.io.File;
 
@@ -15,12 +13,8 @@ import java.io.File;
  * chartA11y {
  *     configFile 'src/main/assets/chart_configs.json'
  *     apiEndpoint = 'https://api.example.com/a11y'
- *     apiKey = 'xxx'
- *     locales 'zh-CN', 'en'
- *     processLayouts = true
  *     enableCache = true
  *     cacheDir = file("${buildDir}/chart-a11y-cache")
- *     imageBasePath = file("src/main/assets/images")
  *     timeout = 30L
  *     concurrency = 4
  *     failOnError = false
@@ -35,9 +29,7 @@ public abstract class ChartA11yExtension {
         this.project = project;
 
         // Set default values
-        getApiEndpoint().convention("https://api.example.com/a11y");
-        getApiKey().convention("");
-        getProcessLayouts().convention(true);
+        getApiEndpoint().convention("http://10.130.128.31:5005/invoke");
         getEnableCache().convention(true);
         getCacheDir().convention(new File(project.getBuildDir(), "chart-a11y-cache"));
         getTimeout().convention(30L);
@@ -56,21 +48,6 @@ public abstract class ChartA11yExtension {
     public abstract Property<String> getApiEndpoint();
 
     /**
-     * API key for authentication.
-     */
-    public abstract Property<String> getApiKey();
-
-    /**
-     * List of supported locales (e.g., "zh-CN", "en").
-     */
-    public abstract ListProperty<String> getLocales();
-
-    /**
-     * Whether to process layout XML files to inject accessibility attributes.
-     */
-    public abstract Property<Boolean> getProcessLayouts();
-
-    /**
      * Whether to enable caching of API responses.
      */
     public abstract Property<Boolean> getEnableCache();
@@ -79,13 +56,6 @@ public abstract class ChartA11yExtension {
      * Directory for storing cached API responses.
      */
     public abstract Property<File> getCacheDir();
-
-    /**
-     * Base path for resolving relative image paths in chart configurations.
-     * If a chart config specifies imagePath: "charts/sales.png", the actual file
-     * will be resolved as: imageBasePath + "/charts/sales.png"
-     */
-    public abstract Property<File> getImageBasePath();
 
     /**
      * API request timeout in seconds.
@@ -112,20 +82,6 @@ public abstract class ChartA11yExtension {
     }
 
     /**
-     * Set the supported locales.
-     */
-    public void locales(String... locales) {
-        getLocales().set(java.util.Arrays.asList(locales));
-    }
-
-    /**
-     * Set the image base path using a string path.
-     */
-    public void imageBasePath(String path) {
-        getImageBasePath().set(project.file(path));
-    }
-
-    /**
      * Resolve the config file relative to the project.
      */
     public File resolveConfigFile() {
@@ -136,10 +92,4 @@ public abstract class ChartA11yExtension {
         return project.file(path);
     }
 
-    /**
-     * Resolve the image base path relative to the project.
-     */
-    public File resolveImageBasePath() {
-        return getImageBasePath().getOrNull();
-    }
 }
