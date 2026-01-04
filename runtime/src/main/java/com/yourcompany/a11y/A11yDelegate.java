@@ -89,6 +89,11 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
 
         // 关键修复：添加自定义动作
         if (!dataPointDescriptions.isEmpty()) {
+            // 动态设置 contentDescription 为当前数据点的描述，避免播报图表摘要
+            String currentDesc = getCurrentDataPointDescription();
+            if (currentDesc != null) {
+                info.setContentDescription(currentDesc);
+            }
             // 添加"下一个数据点"动作
             if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
                 AccessibilityNodeInfoCompat.AccessibilityActionCompat nextAction =
@@ -114,14 +119,11 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
                 info.addAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_SCROLL_BACKWARD);
             }
 
-            // 设置状态描述
+            // 设置状态描述 - 使用简洁格式，避免被读作"列表"
             String stateDesc = getStateDescription();
             info.setStateDescription(stateDesc);
 
-            // 设置 CollectionInfo（帮助 TalkBack 理解这是列表结构）
-            info.setCollectionInfo(AccessibilityNodeInfoCompat.CollectionInfoCompat.obtain(
-                    dataPointDescriptions.size(), 1, false,
-                    AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_SINGLE));
+            // 移除 CollectionInfo 设置以避免 TalkBack 播报"列表"
 
             Log.d(TAG, "Node info initialized: " + dataPointDescriptions.size() +
                     " points, current=" + currentDataPointIndex);
@@ -171,8 +173,9 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     private void announceDataPoint(View host) {
         String description = getCurrentDataPointDescription();
         if (description != null) {
-            String announcement = description + "。" + getStateDescription();
-            host.announceForAccessibility(announcement);
+            // 只播报数据点描述，不附加状态信息
+            // 状态信息已在 stateDescription 中设置，TalkBack 会在合适的时候读取
+            host.announceForAccessibility(description);
         }
     }
 
@@ -180,7 +183,8 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
         if (dataPointDescriptions.isEmpty()) {
             return "";
         }
-        return String.format("第 %d 项，共 %d 项",
+        // 使用更简洁的格式，避免"项"字可能被读作"列表"
+        return String.format("%d / %d",
                 currentDataPointIndex + 1, dataPointDescriptions.size());
     }
 
