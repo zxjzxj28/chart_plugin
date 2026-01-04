@@ -123,17 +123,6 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
                     dataPointDescriptions.size(), 1, false,
                     AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_SINGLE));
 
-            // 更新 contentDescription 包含当前数据点
-            String currentDesc = getCurrentDataPointDescription();
-            if (currentDesc != null) {
-                CharSequence existingDesc = info.getContentDescription();
-                if (existingDesc != null && existingDesc.length() > 0) {
-                    info.setContentDescription(existingDesc + "。当前：" + currentDesc);
-                } else {
-                    info.setContentDescription("图表。当前：" + currentDesc);
-                }
-            }
-
             Log.d(TAG, "Node info initialized: " + dataPointDescriptions.size() +
                     " points, current=" + currentDataPointIndex);
         }
