@@ -1,10 +1,9 @@
 package com.yourcompany.a11y.service;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.yourcompany.a11y.model.A11yResult;
 import com.yourcompany.a11y.model.ChartConfig;
+import com.yourcompany.a11y.model.ChartPoint;
+import com.yourcompany.a11y.model.LocalizedDescription;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -12,19 +11,21 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.text.DecimalFormat;
 
 /**
  * Service for calling the remote A11y API to generate chart descriptions.
@@ -32,21 +33,21 @@ import java.util.concurrent.TimeUnit;
  */
 public class A11yApiService {
 
-    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+    private static final MediaType TEXT = MediaType.get("text/plain; charset=utf-8");
     private static final int MAX_RETRIES = 3;
     private static final long INITIAL_BACKOFF_MS = 1000;
+    private static final String SUMMARY_PREFIX = "图表摘要";
+    private static final String TEMPLATE_PREFIX = "数据点描述模版";
+    private static final Pattern RESPONSE_PATTERN =
+            Pattern.compile("图表摘要\\s*：\\s*([\\s\\S]*?)\\s*数据点描述模版\\s*：\\s*([\\s\\S]*)");
 
     private final String apiEndpoint;
     private final OkHttpClient client;
     private final ExecutorService executor;
-    private final Gson gson;
-    private final File imageBasePath;
 
     public A11yApiService(String apiEndpoint, long timeoutSeconds,
-                          int concurrency, File imageBasePath) {
+                          int concurrency) {
         this.apiEndpoint = apiEndpoint;
-        this.imageBasePath = imageBasePath;
-        this.gson = new GsonBuilder().create();
 
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
@@ -76,7 +77,7 @@ public class A11yApiService {
                     Thread.sleep(backoffMs);
                 }
 
-                return executeRequest(requestBody);
+                return executeRequest(requestBody, config);
             } catch (IOException e) {
                 lastException = e;
             } catch (InterruptedException e) {
@@ -125,118 +126,46 @@ public class A11yApiService {
     }
 
     private String buildRequestBody(ChartConfig config) {
-        JsonObject root = new JsonObject();
+        StringBuilder builder = new StringBuilder();
+        builder.append("TITLE：").append(safeValue(config.getTitle())).append("\n");
+        builder.append("TYPE：").append(safeValue(config.getType())).append("\n");
 
-        // Chart object
-        JsonObject chart = new JsonObject();
-        chart.addProperty("id", config.getId());
-        chart.addProperty("type", config.getType());
-        chart.addProperty("title", config.getTitle());
-        chart.add("data", gson.toJsonTree(config.getData()));
+        boolean includeSeries = isMultiSeries(config.getData());
+        builder.append(safeValue(config.getXLabel()))
+                .append(" | ")
+                .append(safeValue(config.getYLabel()));
+        if (includeSeries) {
+            builder.append(" | SERIES");
+        }
+        builder.append("\n");
 
-        // Add image data if available
-        if (config.hasImage()) {
-            String imageBase64 = readImageAsBase64(config.getImagePath());
-            if (imageBase64 != null) {
-                chart.addProperty("image", imageBase64);
-                chart.addProperty("imageMimeType", getMimeType(config.getImagePath()));
+        List<ChartPoint> points = config.getData();
+        if (points != null) {
+            for (ChartPoint point : points) {
+                builder.append(safeValue(point.getXValue()))
+                        .append(" | ")
+                        .append(formatNumber(point.getYValue()));
+                if (includeSeries) {
+                    builder.append(" | ").append(safeValue(point.getSeries()));
+                }
+                builder.append("\n");
             }
         }
 
-        root.add("chart", chart);
+        Stats stats = computeStats(points);
+        builder.append("MAX：").append(formatNumber(stats.max))
+                .append(" MIN：").append(formatNumber(stats.min))
+                .append(" AVG：").append(formatNumber(stats.avg))
+                .append(" DIFF：").append(formatNumber(stats.diff));
 
-        // Options
-        JsonObject options = new JsonObject();
-        options.addProperty("includeBrief", true);
-        options.addProperty("includeDetailed", false);
-        options.addProperty("includeDataPoints", true);
-        root.add("options", options);
-
-        return gson.toJson(root);
+        return builder.toString();
     }
 
-    /**
-     * Read an image file and encode it as Base64.
-     *
-     * @param imagePath the path to the image file (relative to imageBasePath or absolute)
-     * @return Base64 encoded string, or null if the file cannot be read
-     */
-    private String readImageAsBase64(String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) {
-            return null;
-        }
-
-        File imageFile = resolveImageFile(imagePath);
-        if (imageFile == null || !imageFile.exists() || !imageFile.isFile()) {
-            return null;
-        }
-
-        try {
-            byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
-            return Base64.getEncoder().encodeToString(imageBytes);
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Resolve the image file path.
-     * If the path is absolute, use it directly.
-     * If the path is relative, resolve it against the imageBasePath.
-     *
-     * @param imagePath the image path from config
-     * @return the resolved File object
-     */
-    private File resolveImageFile(String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) {
-            return null;
-        }
-
-        File file = new File(imagePath);
-        if (file.isAbsolute()) {
-            return file;
-        }
-
-        if (imageBasePath != null) {
-            return new File(imageBasePath, imagePath);
-        }
-
-        return file;
-    }
-
-    /**
-     * Get the MIME type based on file extension.
-     *
-     * @param imagePath the image file path
-     * @return the MIME type string
-     */
-    private String getMimeType(String imagePath) {
-        if (imagePath == null) {
-            return "application/octet-stream";
-        }
-
-        String lowerPath = imagePath.toLowerCase();
-        if (lowerPath.endsWith(".png")) {
-            return "image/png";
-        } else if (lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) {
-            return "image/jpeg";
-        } else if (lowerPath.endsWith(".gif")) {
-            return "image/gif";
-        } else if (lowerPath.endsWith(".webp")) {
-            return "image/webp";
-        } else if (lowerPath.endsWith(".bmp")) {
-            return "image/bmp";
-        } else if (lowerPath.endsWith(".svg")) {
-            return "image/svg+xml";
-        }
-        return "application/octet-stream";
-    }
-
-    private A11yResult executeRequest(String requestBody) throws IOException {
+    private A11yResult executeRequest(String requestBody, ChartConfig config) throws IOException {
         Request request = new Request.Builder()
                 .url(apiEndpoint)
-                .header("Content-Type", "application/json")
-                .post(RequestBody.create(requestBody, JSON))
+                .header("Content-Type", "text/plain")
+                .post(RequestBody.create(requestBody, TEXT))
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -245,7 +174,7 @@ public class A11yApiService {
             }
 
             String responseBody = response.body() != null ? response.body().string() : "";
-            return gson.fromJson(responseBody, A11yResult.class);
+            return parseResponse(responseBody, config);
         }
     }
 
@@ -262,5 +191,139 @@ public class A11yApiService {
             executor.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+
+    private A11yResult parseResponse(String responseBody, ChartConfig config) throws IOException {
+        if (responseBody == null || responseBody.isBlank()) {
+            throw new IOException("Empty response body from API");
+        }
+
+        String summary;
+        String template;
+        Matcher matcher = RESPONSE_PATTERN.matcher(responseBody.trim());
+        if (matcher.find()) {
+            summary = matcher.group(1).trim();
+            template = matcher.group(2).trim();
+        } else {
+            throw new IOException("Unexpected response format. Expected \"" + SUMMARY_PREFIX
+                    + "：...\" and \"" + TEMPLATE_PREFIX + "：...\"");
+        }
+
+        List<String> dataPoints = buildDataPointDescriptions(template, config.getData());
+
+        LocalizedDescription description = new LocalizedDescription();
+        description.setBrief(summary);
+        description.setDataPoints(dataPoints);
+
+        A11yResult result = new A11yResult();
+        result.addDescription("default", description);
+        return result;
+    }
+
+    private List<String> buildDataPointDescriptions(String template, List<ChartPoint> points) {
+        List<String> descriptions = new ArrayList<>();
+        if (template == null || template.isBlank() || points == null) {
+            return descriptions;
+        }
+
+        for (ChartPoint point : points) {
+            String description = applyTemplate(template, point);
+            if (description != null && !description.isBlank()) {
+                descriptions.add(description.trim());
+            }
+        }
+
+        return descriptions;
+    }
+
+    private String applyTemplate(String template, ChartPoint point) {
+        String result = template;
+        String xValue = safeValue(point.getXValue());
+        String yValue = formatNumber(point.getYValue());
+        String series = safeValue(point.getSeries());
+
+        result = replaceToken(result, "{x}", xValue);
+        result = replaceToken(result, "{x_value}", xValue);
+        result = replaceToken(result, "{{x}}", xValue);
+        result = replaceToken(result, "{y}", yValue);
+        result = replaceToken(result, "{y_value}", yValue);
+        result = replaceToken(result, "{{y}}", yValue);
+        result = replaceToken(result, "{series}", series);
+        result = replaceToken(result, "{{series}}", series);
+
+        if (series.isEmpty()) {
+            result = result.replaceAll("\\s*\\|?\\s*\\{\\{?series\\}?\\}\\s*", " ").trim();
+        }
+
+        return result;
+    }
+
+    private String replaceToken(String template, String token, String value) {
+        return template.replace(token, value == null ? "" : value);
+    }
+
+    private boolean isMultiSeries(List<ChartPoint> points) {
+        if (points == null) {
+            return false;
+        }
+        Set<String> seriesNames = new TreeSet<>();
+        for (ChartPoint point : points) {
+            if (point != null && point.getSeries() != null && !point.getSeries().isBlank()) {
+                seriesNames.add(point.getSeries().trim());
+            }
+        }
+        return seriesNames.size() > 1;
+    }
+
+    private Stats computeStats(List<ChartPoint> points) {
+        Stats stats = new Stats();
+        if (points == null || points.isEmpty()) {
+            return stats;
+        }
+
+        double sum = 0;
+        int count = 0;
+        for (ChartPoint point : points) {
+            if (point == null || point.getYValue() == null) {
+                continue;
+            }
+            double value = point.getYValue();
+            stats.max = Math.max(stats.max, value);
+            stats.min = Math.min(stats.min, value);
+            sum += value;
+            count++;
+        }
+
+        if (count > 0) {
+            stats.avg = sum / count;
+            stats.diff = stats.max - stats.min;
+        } else {
+            stats.max = 0;
+            stats.min = 0;
+            stats.avg = 0;
+            stats.diff = 0;
+        }
+        return stats;
+    }
+
+    private String safeValue(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String formatNumber(Double value) {
+        if (value == null) {
+            return "";
+        }
+        DecimalFormat format = new DecimalFormat("0.##");
+        format.setDecimalSeparatorAlwaysShown(false);
+        format.setGroupingUsed(false);
+        return format.format(value);
+    }
+
+    private static class Stats {
+        private double max = Double.NEGATIVE_INFINITY;
+        private double min = Double.POSITIVE_INFINITY;
+        private double avg = 0;
+        private double diff = 0;
     }
 }

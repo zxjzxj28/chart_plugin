@@ -5,35 +5,69 @@
       "id": "sales_quarterly",
       "type": "BAR",
       "title": "季度销售额",
-      "imagePath": "charts/sales_quarterly.png",
-      "data": {
-        "labels": ["Q1", "Q2", "Q3", "Q4"],
-        "datasets": [
-          {
-            "name": "销售额",
-            "values": [120, 150, 180, 90],
-            "unit": "万元"
-          }
-        ]
-      },
-      "context": "用于展示公司年度销售趋势"
+      "x_label": "季度",
+      "y_label": "销售额(万元)",
+      "data": [
+        {
+          "x_value": "Q1",
+          "y_value": 120,
+          "series": "销售额"
+        },
+        {
+          "x_value": "Q2",
+          "y_value": 150,
+          "series": "销售额"
+        },
+        {
+          "x_value": "Q3",
+          "y_value": 180,
+          "series": "销售额"
+        },
+        {
+          "x_value": "Q4",
+          "y_value": 90,
+          "series": "销售额"
+        }
+      ]
     },
     {
       "id": "user_growth",
       "type": "LINE",
       "title": "用户增长趋势",
-      "imagePath": "charts/user_growth.png",
-      "data": {
-        "labels": ["1月", "2月", "3月", "4月", "5月", "6月"],
-        "datasets": [
-          {
-            "name": "新增用户",
-            "values": [1200, 1500, 1800, 2200, 2800, 3500],
-            "unit": "人"
-          }
-        ]
-      },
-      "context": "展示上半年用户增长情况"
+      "x_label": "月份",
+      "y_label": "新增用户(人)",
+      "data": [
+        {
+          "x_value": "1月",
+          "y_value": 1200,
+          "series": "新增用户"
+        },
+        {
+          "x_value": "2月",
+          "y_value": 1500,
+          "series": "新增用户"
+        },
+        {
+          "x_value": "3月",
+          "y_value": 1800,
+          "series": "新增用户"
+        },
+        {
+          "x_value": "4月",
+          "y_value": 2200,
+          "series": "新增用户"
+        },
+        {
+          "x_value": "5月",
+          "y_value": 2800,
+          "series": "新增用户"
+        },
+        {
+          "x_value": "6月",
+          "y_value": 3500,
+          "series": "新增用户"
+        }
+      ]
     }
   ]
 }

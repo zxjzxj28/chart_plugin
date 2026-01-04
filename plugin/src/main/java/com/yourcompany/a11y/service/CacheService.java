@@ -10,7 +10,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -23,16 +22,9 @@ public class CacheService {
     private final File cacheDir;
     private final Gson gson;
     private final boolean enabled;
-    private final File imageBasePath;
-
     public CacheService(File cacheDir, boolean enabled) {
-        this(cacheDir, enabled, null);
-    }
-
-    public CacheService(File cacheDir, boolean enabled, File imageBasePath) {
         this.cacheDir = cacheDir;
         this.enabled = enabled;
-        this.imageBasePath = imageBasePath;
         this.gson = new GsonBuilder().setPrettyPrinting().create();
 
         if (enabled && !cacheDir.exists()) {
@@ -42,8 +34,6 @@ public class CacheService {
 
     /**
      * Compute SHA-256 hash for a chart configuration.
-     * If the chart has an associated image, the image content is also included in the hash.
-     *
      * @param config the chart configuration
      * @return the hex-encoded hash string
      */
@@ -55,14 +45,6 @@ public class CacheService {
             String json = gson.toJson(config);
             digest.update(json.getBytes(StandardCharsets.UTF_8));
 
-            // If the chart has an image, also hash the image content
-            if (config.hasImage()) {
-                byte[] imageBytes = readImageBytes(config.getImagePath());
-                if (imageBytes != null) {
-                    digest.update(imageBytes);
-                }
-            }
-
             byte[] hashBytes = digest.digest();
             return bytesToHex(hashBytes);
         } catch (NoSuchAlgorithmException e) {
@@ -70,51 +52,6 @@ public class CacheService {
         }
     }
 
-    /**
-     * Read image file as byte array.
-     *
-     * @param imagePath the path to the image file
-     * @return byte array of image content, or null if file cannot be read
-     */
-    private byte[] readImageBytes(String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) {
-            return null;
-        }
-
-        File imageFile = resolveImageFile(imagePath);
-        if (imageFile == null || !imageFile.exists() || !imageFile.isFile()) {
-            return null;
-        }
-
-        try {
-            return Files.readAllBytes(imageFile.toPath());
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Resolve the image file path.
-     *
-     * @param imagePath the image path from config
-     * @return the resolved File object
-     */
-    private File resolveImageFile(String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) {
-            return null;
-        }
-
-        File file = new File(imagePath);
-        if (file.isAbsolute()) {
-            return file;
-        }
-
-        if (imageBasePath != null) {
-            return new File(imageBasePath, imagePath);
-        }
-
-        return file;
-    }
 
     private String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();

@@ -15,7 +15,6 @@ import java.io.File;
  *     apiEndpoint = 'https://api.example.com/a11y'
  *     enableCache = true
  *     cacheDir = file("${buildDir}/chart-a11y-cache")
- *     imageBasePath = file("src/main/assets/images")
  *     timeout = 30L
  *     concurrency = 4
  *     failOnError = false
@@ -30,7 +29,7 @@ public abstract class ChartA11yExtension {
         this.project = project;
 
         // Set default values
-        getApiEndpoint().convention("https://api.example.com/a11y");
+        getApiEndpoint().convention("http://10.130.128.31:5005/invoke");
         getEnableCache().convention(true);
         getCacheDir().convention(new File(project.getBuildDir(), "chart-a11y-cache"));
         getTimeout().convention(30L);
@@ -59,13 +58,6 @@ public abstract class ChartA11yExtension {
     public abstract Property<File> getCacheDir();
 
     /**
-     * Base path for resolving relative image paths in chart configurations.
-     * If a chart config specifies imagePath: "charts/sales.png", the actual file
-     * will be resolved as: imageBasePath + "/charts/sales.png"
-     */
-    public abstract Property<File> getImageBasePath();
-
-    /**
      * API request timeout in seconds.
      */
     public abstract Property<Long> getTimeout();
@@ -90,13 +82,6 @@ public abstract class ChartA11yExtension {
     }
 
     /**
-     * Set the image base path using a string path.
-     */
-    public void imageBasePath(String path) {
-        getImageBasePath().set(project.file(path));
-    }
-
-    /**
      * Resolve the config file relative to the project.
      */
     public File resolveConfigFile() {
@@ -107,10 +92,4 @@ public abstract class ChartA11yExtension {
         return project.file(path);
     }
 
-    /**
-     * Resolve the image base path relative to the project.
-     */
-    public File resolveImageBasePath() {
-        return getImageBasePath().getOrNull();
-    }
 }

@@ -7,9 +7,11 @@ public class ChartConfig {
     private String id;
     private String type;
     private String title;
-    private ChartData data;
-    private String context;
-    private String imagePath;
+    @com.google.gson.annotations.SerializedName("x_label")
+    private String xLabel;
+    @com.google.gson.annotations.SerializedName("y_label")
+    private String yLabel;
+    private java.util.List<ChartPoint> data;
 
     public ChartConfig() {
     }
@@ -42,37 +44,28 @@ public class ChartConfig {
         this.title = title;
     }
 
-    public ChartData getData() {
+    public String getXLabel() {
+        return xLabel;
+    }
+
+    public void setXLabel(String xLabel) {
+        this.xLabel = xLabel;
+    }
+
+    public String getYLabel() {
+        return yLabel;
+    }
+
+    public void setYLabel(String yLabel) {
+        this.yLabel = yLabel;
+    }
+
+    public java.util.List<ChartPoint> getData() {
         return data;
     }
 
-    public void setData(ChartData data) {
+    public void setData(java.util.List<ChartPoint> data) {
         this.data = data;
-    }
-
-    public String getContext() {
-        return context;
-    }
-
-    public void setContext(String context) {
-        this.context = context;
-    }
-
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    /**
-     * Check if this chart has an associated image.
-     *
-     * @return true if imagePath is set
-     */
-    public boolean hasImage() {
-        return imagePath != null && !imagePath.isEmpty();
     }
 
     /**
@@ -101,9 +94,9 @@ public class ChartConfig {
                 "id='" + id + '\'' +
                 ", type='" + type + '\'' +
                 ", title='" + title + '\'' +
+                ", xLabel='" + xLabel + '\'' +
+                ", yLabel='" + yLabel + '\'' +
                 ", data=" + data +
-                ", context='" + context + '\'' +
-                ", imagePath='" + imagePath + '\'' +
                 '}';
     }
 }

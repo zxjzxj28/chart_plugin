@@ -45,7 +45,7 @@ android {
 
 chartA11y {
     configFile 'src/main/assets/chart_configs.json'
-    apiEndpoint = 'https://api.example.com/a11y'
+    apiEndpoint = 'http://10.130.128.31:5005/invoke'
     enableCache = true
     cacheDir = file("${buildDir}/chart-a11y-cache")
     timeout = 30L

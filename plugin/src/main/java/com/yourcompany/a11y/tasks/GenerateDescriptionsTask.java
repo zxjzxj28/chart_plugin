@@ -16,7 +16,6 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
@@ -63,10 +62,6 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
     @Input
     public abstract Property<Boolean> getFailOnError();
 
-    @Input
-    @Optional
-    public abstract Property<File> getImageBasePath();
-
     @OutputDirectory
     public abstract DirectoryProperty getOutputDir();
 
@@ -91,19 +86,15 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
         getLogger().lifecycle("Found {} chart configurations", charts.size());
 
         // Initialize services
-        File imageBasePath = getImageBasePath().getOrNull();
-
         CacheService cacheService = new CacheService(
                 getCacheDir().get(),
-                getEnableCache().get(),
-                imageBasePath
+                getEnableCache().get()
         );
 
         A11yApiService apiService = new A11yApiService(
                 getApiEndpoint().get(),
                 getApiTimeout().get(),
-                getConcurrency().get(),
-                imageBasePath
+                getConcurrency().get()
         );
 
         // Process charts
