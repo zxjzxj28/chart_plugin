@@ -7,8 +7,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.charts.RadarChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
@@ -16,12 +14,6 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.data.RadarData;
-import com.github.mikephil.charting.data.RadarDataSet;
-import com.github.mikephil.charting.data.RadarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.yourcompany.a11y.ChartA11y;
@@ -33,11 +25,9 @@ import java.util.List;
 /**
  * Sample activity demonstrating Chart Accessibility features.
  *
- * This activity shows four different charts:
+ * This activity shows two different charts:
  * 1. Bar Chart - accessibility configured via XML attributes (with data point navigation)
  * 2. Line Chart - accessibility configured via code (simple API)
- * 3. Pie Chart - accessibility configured via XML attributes (with data point navigation)
- * 4. Radar Chart - accessibility configured via code (Builder pattern)
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -48,13 +38,10 @@ public class MainActivity extends AppCompatActivity {
 
         setupBarChart();
         setupLineChart();
-        setupPieChart();
-        setupRadarChart();
 
         // Initialize data point navigation for specific XML-configured charts
         // Option 1: By resource ID (recommended)
         ChartA11y.initializeFromXml(this, R.id.barChart);
-        ChartA11y.initializeFromXml(this, R.id.pieChart);
 
         // Option 2: By view reference
         // ChartA11y.initializeFromXml(findViewById(R.id.barChart));
@@ -136,75 +123,4 @@ public class MainActivity extends AppCompatActivity {
         ChartA11y.apply(chart, "user_growth", DescType.DETAILED);
     }
 
-    /**
-     * Set up the pie chart with sample data.
-     * Accessibility is configured via XML attributes.
-     */
-    private void setupPieChart() {
-        PieChart chart = findViewById(R.id.pieChart);
-
-        // Sample data: Market share
-        List<PieEntry> entries = new ArrayList<>();
-        entries.add(new PieEntry(35f, "Product A"));
-        entries.add(new PieEntry(28f, "Product B"));
-        entries.add(new PieEntry(22f, "Product C"));
-        entries.add(new PieEntry(15f, "Others"));
-
-        PieDataSet dataSet = new PieDataSet(entries, "Market Share");
-        dataSet.setColors(ColorTemplate.COLORFUL_COLORS);
-        dataSet.setValueTextSize(12f);
-        dataSet.setValueTextColor(Color.WHITE);
-
-        PieData data = new PieData(dataSet);
-        chart.setData(data);
-
-        chart.getDescription().setEnabled(false);
-        chart.setEntryLabelColor(Color.WHITE);
-        chart.animateY(1000);
-        chart.invalidate();
-    }
-
-    /**
-     * Set up the radar chart with sample data.
-     * Accessibility is configured via code using the Builder pattern.
-     */
-    private void setupRadarChart() {
-        RadarChart chart = findViewById(R.id.radarChart);
-
-        // Sample data: Performance metrics
-        List<RadarEntry> entries = new ArrayList<>();
-        entries.add(new RadarEntry(85f));
-        entries.add(new RadarEntry(90f));
-        entries.add(new RadarEntry(78f));
-        entries.add(new RadarEntry(82f));
-        entries.add(new RadarEntry(88f));
-
-        RadarDataSet dataSet = new RadarDataSet(entries, "Performance");
-        dataSet.setColor(Color.rgb(103, 110, 129));
-        dataSet.setFillColor(Color.rgb(103, 110, 129));
-        dataSet.setDrawFilled(true);
-        dataSet.setFillAlpha(180);
-        dataSet.setLineWidth(2f);
-        dataSet.setDrawHighlightCircleEnabled(true);
-
-        RadarData data = new RadarData(dataSet);
-        chart.setData(data);
-
-        // Configure X axis (labels)
-        chart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(
-                new String[]{"Communication", "Technical", "Teamwork", "Innovation", "Execution"}));
-
-        chart.getDescription().setEnabled(false);
-        chart.animateXY(1000, 1000);
-        chart.invalidate();
-
-        // Apply accessibility using Builder pattern
-        ChartA11y.with(chart)
-                .chartId("performance_radar")
-                .descType(DescType.DETAILED)
-                .focusable(true)
-                .roleDescription("Radar Chart")
-                .enableDataPointNavigation(true)
-                .apply();
-    }
 }

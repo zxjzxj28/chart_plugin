@@ -1,7 +1,19 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.squareup.okhttp3:okhttp:4.12.0'
+    }
+}
+
 plugins {
     id 'com.android.application'
     id 'com.yourcompany.chart-a11y'
 }
+
+// Expected response: JSON object like {"a11y_chart_sales_quarterly_brief":"..."}
+def chartDescriptionsUrl = project.findProperty('chartDescriptionsUrl') ?: 'https://example.com/chart-descriptions'
 
 android {
     namespace 'com.yourcompany.a11y.sample'
@@ -28,6 +40,55 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+
+    sourceSets {
+        main {
+            res.srcDirs += "${buildDir}/generated/res/chartDescriptions"
+        }
+    }
+}
+
+tasks.register('fetchChartDescriptions') {
+    def outputDir = file("${buildDir}/generated/res/chartDescriptions/values")
+    outputs.dir(outputDir)
+
+    doLast {
+        if (!chartDescriptionsUrl?.trim()) {
+            throw new GradleException('chartDescriptionsUrl is empty. Please configure the remote endpoint URL.')
+        }
+
+        outputDir.mkdirs()
+        def outputFile = new File(outputDir, 'strings.xml')
+        def client = new okhttp3.OkHttpClient()
+        def request = new okhttp3.Request.Builder()
+                .url(chartDescriptionsUrl)
+                .build()
+        def response = client.newCall(request).execute()
+        try {
+            if (!response.isSuccessful()) {
+                throw new GradleException("Failed to fetch chart descriptions: HTTP ${response.code()}")
+            }
+
+            def payload = response.body().string()
+            def parsed = new groovy.json.JsonSlurper().parseText(payload)
+
+            def writer = new StringWriter()
+            def xml = new groovy.xml.MarkupBuilder(writer)
+            xml.resources {
+                parsed.each { key, value ->
+                    string(name: key, value.toString())
+                }
+            }
+
+            outputFile.text = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n${writer}"
+        } finally {
+            response.close()
+        }
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn(tasks.named('fetchChartDescriptions'))
 }
 
 // Configure Chart A11y Plugin

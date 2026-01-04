@@ -34,38 +34,6 @@
         ]
       },
       "context": "展示上半年用户增长情况"
-    },
-    {
-      "id": "market_share",
-      "type": "PIE",
-      "title": "市场份额分布",
-      "data": {
-        "labels": ["产品A", "产品B", "产品C", "其他"],
-        "datasets": [
-          {
-            "name": "份额",
-            "values": [35, 28, 22, 15],
-            "unit": "%"
-          }
-        ]
-      },
-      "context": "展示各产品线市场占有率"
-    },
-    {
-      "id": "performance_radar",
-      "type": "RADAR",
-      "title": "员工绩效评估",
-      "data": {
-        "labels": ["沟通能力", "技术水平", "团队协作", "创新思维", "执行力"],
-        "datasets": [
-          {
-            "name": "得分",
-            "values": [85, 90, 78, 82, 88],
-            "unit": "分"
-          }
-        ]
-      },
-      "context": "用于年度员工绩效综合评估"
     }
   ]
 }
