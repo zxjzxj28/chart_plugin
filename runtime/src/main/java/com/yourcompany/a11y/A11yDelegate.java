@@ -159,13 +159,9 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     }
 
     private void notifyNodeChanged(View host) {
-        // 通知节点信息已变化
+        // 只通知节点信息已变化，不重新触发焦点事件
+        // 避免重新播报 contentDescription（图表摘要）覆盖数据点描述
         host.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
-
-        // 重新获取焦点以触发状态更新
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            host.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
-        }
     }
 
     private void announceDataPoint(View host) {
