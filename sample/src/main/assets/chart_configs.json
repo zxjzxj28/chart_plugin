@@ -10,23 +10,19 @@
       "data": [
         {
           "x_value": "Q1",
-          "y_value": 120,
-          "series": "销售额"
+          "y_value": 120
         },
         {
           "x_value": "Q2",
-          "y_value": 150,
-          "series": "销售额"
+          "y_value": 150
         },
         {
           "x_value": "Q3",
-          "y_value": 180,
-          "series": "销售额"
+          "y_value": 180
         },
         {
           "x_value": "Q4",
-          "y_value": 90,
-          "series": "销售额"
+          "y_value": 90
         }
       ]
     },
@@ -39,33 +35,27 @@
       "data": [
         {
           "x_value": "1月",
-          "y_value": 1200,
-          "series": "新增用户"
+          "y_value": 1200
         },
         {
           "x_value": "2月",
-          "y_value": 1500,
-          "series": "新增用户"
+          "y_value": 1500
         },
         {
           "x_value": "3月",
-          "y_value": 1800,
-          "series": "新增用户"
+          "y_value": 1800
         },
         {
           "x_value": "4月",
-          "y_value": 2200,
-          "series": "新增用户"
+          "y_value": 2200
         },
         {
           "x_value": "5月",
-          "y_value": 2800,
-          "series": "新增用户"
+          "y_value": 2800
         },
         {
           "x_value": "6月",
-          "y_value": 3500,
-          "series": "新增用户"
+          "y_value": 3500
         }
       ]
     }
