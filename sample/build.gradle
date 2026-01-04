@@ -1,7 +1,19 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.squareup.okhttp3:okhttp:4.12.0'
+    }
+}
+
 plugins {
     id 'com.android.application'
     id 'com.yourcompany.chart-a11y'
 }
+
+// Expected response: JSON object like {"a11y_chart_sales_quarterly_brief":"..."}
+def chartDescriptionsUrl = project.findProperty('chartDescriptionsUrl') ?: 'https://example.com/chart-descriptions'
 
 android {
     namespace 'com.yourcompany.a11y.sample'
