@@ -13,11 +13,9 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
@@ -39,7 +37,7 @@ import java.util.Map;
  * 3. Checks local cache for existing results
  * 4. Calls remote API for uncached charts
  * 5. Saves results to cache
- * 6. Generates string resource files for each locale
+ * 6. Generates string resource files from the API response
  */
 public abstract class GenerateDescriptionsTask extends DefaultTask {
 
@@ -48,13 +46,6 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
 
     @Input
     public abstract Property<String> getApiEndpoint();
-
-    @Input
-    @Optional
-    public abstract Property<String> getApiKey();
-
-    @Input
-    public abstract ListProperty<String> getLocales();
 
     @Input
     public abstract Property<Boolean> getEnableCache();
@@ -70,10 +61,6 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
 
     @Input
     public abstract Property<Boolean> getFailOnError();
-
-    @Input
-    @Optional
-    public abstract Property<File> getImageBasePath();
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDir();
@@ -99,22 +86,15 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
         getLogger().lifecycle("Found {} chart configurations", charts.size());
 
         // Initialize services
-        File imageBasePath = getImageBasePath().getOrNull();
-
         CacheService cacheService = new CacheService(
                 getCacheDir().get(),
-                getEnableCache().get(),
-                imageBasePath
+                getEnableCache().get()
         );
 
-        List<String> locales = getLocales().get();
         A11yApiService apiService = new A11yApiService(
                 getApiEndpoint().get(),
-                getApiKey().getOrElse(""),
                 getApiTimeout().get(),
-                getConcurrency().get(),
-                locales,
-                imageBasePath
+                getConcurrency().get()
         );
 
         // Process charts
@@ -159,7 +139,7 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
 
         // Generate resource files
         if (!results.isEmpty()) {
-            generateResources(charts, results, locales);
+            generateResources(charts, results);
         }
     }
 
@@ -175,13 +155,12 @@ public abstract class GenerateDescriptionsTask extends DefaultTask {
         }
     }
 
-    private void generateResources(List<ChartConfig> charts, Map<String, A11yResult> results,
-                                   List<String> locales) {
+    private void generateResources(List<ChartConfig> charts, Map<String, A11yResult> results) {
         StringResourceGenerator generator = new StringResourceGenerator();
         File outputDir = getOutputDir().get().getAsFile();
 
         try {
-            generator.generate(outputDir, charts, results, locales);
+            generator.generate(outputDir, charts, results);
             getLogger().lifecycle("Generated string resources in: {}", outputDir.getAbsolutePath());
         } catch (IOException e) {
             getLogger().error("Failed to generate resources: {}", e.getMessage());

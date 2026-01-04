@@ -36,8 +36,6 @@
             android:layout_height="300dp"
             android:layout_marginTop="8dp"
             app:a11yChartId="sales_quarterly"
-            app:a11yDescType="detailed"
-            app:a11yFocusable="true"
             app:a11yEnableNavigation="true" />
 
         <!-- Line Chart with code-based accessibility -->
@@ -51,40 +49,6 @@
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChart"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="8dp" />
-
-        <!-- Pie Chart with XML-based accessibility -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/chart_market_share_title"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="24dp" />
-
-        <com.github.mikephil.charting.charts.PieChart
-            android:id="@+id/pieChart"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="8dp"
-            app:a11yChartId="market_share"
-            app:a11yDescType="brief"
-            app:a11yFocusable="true"
-            app:a11yEnableNavigation="true" />
-
-        <!-- Radar Chart with Builder pattern -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/chart_performance_title"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="24dp" />
-
-        <com.github.mikephil.charting.charts.RadarChart
-            android:id="@+id/radarChart"
             android:layout_width="match_parent"
             android:layout_height="300dp"
             android:layout_marginTop="8dp"
