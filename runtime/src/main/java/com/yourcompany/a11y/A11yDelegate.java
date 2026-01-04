@@ -29,7 +29,7 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     private final String chartId;
     private final String roleDescription;
     private final List<String> dataPointDescriptions;
-    private int currentDataPointIndex = 0;
+    private int currentDataPointIndex = -1;  // 初始化为-1，表示未选中任何数据点
 
     // 自定义动作标签（可本地化）
     private String actionLabelNext = "下一个数据点";
@@ -73,7 +73,7 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     public void setDataPoints(@NonNull List<String> descriptions) {
         dataPointDescriptions.clear();
         dataPointDescriptions.addAll(descriptions);
-        currentDataPointIndex = 0;
+        currentDataPointIndex = -1;  // 重置为未选中状态
         Log.d(TAG, "Set " + dataPointDescriptions.size() + " data points for chart: " + chartId);
     }
 
@@ -93,6 +93,7 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
             // 数据点描述仅在导航操作时通过 announceForAccessibility 播报
 
             // 添加"下一个数据点"动作
+            // 如果未选中任何数据点(index=-1)或未到最后一个，允许前进
             if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
                 AccessibilityNodeInfoCompat.AccessibilityActionCompat nextAction =
                         new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
@@ -101,6 +102,7 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
             }
 
             // 添加"上一个数据点"动作
+            // 只有当已选中数据点且不是第一个时，才允许后退
             if (currentDataPointIndex > 0) {
                 AccessibilityNodeInfoCompat.AccessibilityActionCompat prevAction =
                         new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
@@ -174,7 +176,7 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     }
 
     public String getStateDescription() {
-        if (dataPointDescriptions.isEmpty()) {
+        if (dataPointDescriptions.isEmpty() || currentDataPointIndex < 0) {
             return "";
         }
         // 使用更简洁的格式，避免"项"字可能被读作"列表"
@@ -185,6 +187,7 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     @Nullable
     public String getCurrentDataPointDescription() {
         if (dataPointDescriptions.isEmpty() ||
+                currentDataPointIndex < 0 ||
                 currentDataPointIndex >= dataPointDescriptions.size()) {
             return null;
         }
@@ -198,7 +201,7 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
     }
 
     public void resetNavigation() {
-        currentDataPointIndex = 0;
+        currentDataPointIndex = -1;  // 重置为未选中状态
     }
 
     public int getDataPointCount() {
