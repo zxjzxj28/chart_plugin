@@ -89,11 +89,9 @@ public class A11yDelegate extends AccessibilityDelegateCompat {
 
         // 关键修复：添加自定义动作
         if (!dataPointDescriptions.isEmpty()) {
-            // 动态设置 contentDescription 为当前数据点的描述，避免播报图表摘要
-            String currentDesc = getCurrentDataPointDescription();
-            if (currentDesc != null) {
-                info.setContentDescription(currentDesc);
-            }
+            // 不覆盖 contentDescription，保留图表摘要供首次聚焦时播报
+            // 数据点描述仅在导航操作时通过 announceForAccessibility 播报
+
             // 添加"下一个数据点"动作
             if (currentDataPointIndex < dataPointDescriptions.size() - 1) {
                 AccessibilityNodeInfoCompat.AccessibilityActionCompat nextAction =
