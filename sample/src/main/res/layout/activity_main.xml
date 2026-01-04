@@ -36,8 +36,6 @@
             android:layout_height="300dp"
             android:layout_marginTop="8dp"
             app:a11yChartId="sales_quarterly"
-            app:a11yDescType="detailed"
-            app:a11yFocusable="true"
             app:a11yEnableNavigation="true" />
 
         <!-- Line Chart with code-based accessibility -->

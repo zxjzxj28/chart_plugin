@@ -17,7 +17,6 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.yourcompany.a11y.ChartA11y;
-import com.yourcompany.a11y.DescType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Set up the bar chart with sample data.
-     * Accessibility is configured via XML attributes (a11yChartId, a11yDescType).
+     * Accessibility is configured via XML attributes (a11yChartId).
      */
     private void setupBarChart() {
         BarChart chart = findViewById(R.id.barChart);
@@ -120,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         chart.invalidate();
 
         // Apply accessibility using simple API
-        ChartA11y.apply(chart, "user_growth", DescType.DETAILED);
+        ChartA11y.apply(chart, "user_growth");
     }
 
 }

@@ -1,9 +1,7 @@
 package com.yourcompany.a11y;
 
 import org.gradle.api.Project;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.file.RegularFileProperty;
 
 import java.io.File;
 
@@ -15,9 +13,6 @@ import java.io.File;
  * chartA11y {
  *     configFile 'src/main/assets/chart_configs.json'
  *     apiEndpoint = 'https://api.example.com/a11y'
- *     apiKey = 'xxx'
- *     locales 'zh-CN', 'en'
- *     processLayouts = true
  *     enableCache = true
  *     cacheDir = file("${buildDir}/chart-a11y-cache")
  *     imageBasePath = file("src/main/assets/images")
@@ -36,8 +31,6 @@ public abstract class ChartA11yExtension {
 
         // Set default values
         getApiEndpoint().convention("https://api.example.com/a11y");
-        getApiKey().convention("");
-        getProcessLayouts().convention(true);
         getEnableCache().convention(true);
         getCacheDir().convention(new File(project.getBuildDir(), "chart-a11y-cache"));
         getTimeout().convention(30L);
@@ -54,21 +47,6 @@ public abstract class ChartA11yExtension {
      * Remote API endpoint for generating accessibility descriptions.
      */
     public abstract Property<String> getApiEndpoint();
-
-    /**
-     * API key for authentication.
-     */
-    public abstract Property<String> getApiKey();
-
-    /**
-     * List of supported locales (e.g., "zh-CN", "en").
-     */
-    public abstract ListProperty<String> getLocales();
-
-    /**
-     * Whether to process layout XML files to inject accessibility attributes.
-     */
-    public abstract Property<Boolean> getProcessLayouts();
 
     /**
      * Whether to enable caching of API responses.
@@ -109,13 +87,6 @@ public abstract class ChartA11yExtension {
      */
     public void configFile(String path) {
         getConfigFile().set(path);
-    }
-
-    /**
-     * Set the supported locales.
-     */
-    public void locales(String... locales) {
-        getLocales().set(java.util.Arrays.asList(locales));
     }
 
     /**

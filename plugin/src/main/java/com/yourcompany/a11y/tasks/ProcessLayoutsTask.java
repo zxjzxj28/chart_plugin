@@ -2,7 +2,6 @@ package com.yourcompany.a11y.tasks;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
@@ -57,16 +56,8 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
     @OutputDirectory
     public abstract DirectoryProperty getOutputDir();
 
-    @Input
-    public abstract Property<Boolean> getLayoutProcessingEnabled();
-
     @TaskAction
     public void processLayouts() {
-        if (!getLayoutProcessingEnabled().get()) {
-            getLogger().info("Layout processing is disabled");
-            return;
-        }
-
         File layoutDir = getLayoutDir().get().getAsFile();
         if (!layoutDir.exists()) {
             getLogger().warn("Layout directory not found: " + layoutDir.getAbsolutePath());
@@ -170,8 +161,6 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
     private void processElement(Element element) {
         // Get chart ID and description type
         String chartId = getAttributeValue(element, A11Y_CHART_ID);
-        String descType = getAttributeValue(element, A11Y_DESC_TYPE);
-        String focusable = getAttributeValue(element, A11Y_FOCUSABLE);
         String enableNavigation = getAttributeValue(element, A11Y_ENABLE_NAVIGATION);
 
         if (chartId == null || chartId.isEmpty()) {
@@ -181,28 +170,21 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
         // Convert chartId to resource name
         String resourceName = chartIdToResourceName(chartId);
 
-        // Determine description type suffix (default to brief)
-        String typeSuffix = "brief";
-        if ("detailed".equalsIgnoreCase(descType) || "1".equals(descType)) {
-            typeSuffix = "detailed";
-        }
-
         // Set contentDescription
-        String contentDescRef = "@string/a11y_chart_" + resourceName + "_" + typeSuffix;
+        String contentDescRef = "@string/a11y_chart_" + resourceName;
         element.setAttributeNS(ANDROID_NS, "android:contentDescription", contentDescRef);
 
         // Set focusable
-        boolean isFocusable = focusable == null || !"false".equalsIgnoreCase(focusable);
-        element.setAttributeNS(ANDROID_NS, "android:focusable", String.valueOf(isFocusable));
+        element.setAttributeNS(ANDROID_NS, "android:focusable", "true");
 
         // Set importantForAccessibility
         element.setAttributeNS(ANDROID_NS, "android:importantForAccessibility", "yes");
 
         // If navigation is enabled, save metadata in tag for runtime initialization
-        // Tag format: "a11y:{chartId}:{descType}:{enableNavigation}"
+        // Tag format: "a11y:{chartId}:{enableNavigation}"
         boolean navEnabled = "true".equalsIgnoreCase(enableNavigation);
         if (navEnabled) {
-            String tagValue = A11Y_TAG_PREFIX + chartId + ":" + typeSuffix + ":true";
+            String tagValue = A11Y_TAG_PREFIX + chartId + ":true";
             element.setAttributeNS(ANDROID_NS, "android:tag", tagValue);
         }
 
