@@ -37,23 +37,14 @@ public class A11yApiService {
     private static final long INITIAL_BACKOFF_MS = 1000;
 
     private final String apiEndpoint;
-    private final String apiKey;
     private final OkHttpClient client;
     private final ExecutorService executor;
     private final Gson gson;
-    private final List<String> locales;
     private final File imageBasePath;
 
-    public A11yApiService(String apiEndpoint, String apiKey, long timeoutSeconds,
-                          int concurrency, List<String> locales) {
-        this(apiEndpoint, apiKey, timeoutSeconds, concurrency, locales, null);
-    }
-
-    public A11yApiService(String apiEndpoint, String apiKey, long timeoutSeconds,
-                          int concurrency, List<String> locales, File imageBasePath) {
+    public A11yApiService(String apiEndpoint, long timeoutSeconds,
+                          int concurrency, File imageBasePath) {
         this.apiEndpoint = apiEndpoint;
-        this.apiKey = apiKey;
-        this.locales = locales != null ? locales : List.of("en");
         this.imageBasePath = imageBasePath;
         this.gson = new GsonBuilder().create();
 
@@ -154,13 +145,10 @@ public class A11yApiService {
 
         root.add("chart", chart);
 
-        // Locales
-        root.add("locales", gson.toJsonTree(locales));
-
         // Options
         JsonObject options = new JsonObject();
         options.addProperty("includeBrief", true);
-        options.addProperty("includeDetailed", true);
+        options.addProperty("includeDetailed", false);
         options.addProperty("includeDataPoints", true);
         root.add("options", options);
 
@@ -248,7 +236,6 @@ public class A11yApiService {
         Request request = new Request.Builder()
                 .url(apiEndpoint)
                 .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + apiKey)
                 .post(RequestBody.create(requestBody, JSON))
                 .build();
 

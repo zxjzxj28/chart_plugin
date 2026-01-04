@@ -28,15 +28,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+
 }
 
-// Configure Chart A11y Plugin
 chartA11y {
     configFile 'src/main/assets/chart_configs.json'
     apiEndpoint = 'https://api.example.com/a11y'
-    apiKey = System.getenv('CHART_A11Y_API_KEY') ?: ''
-    locales 'zh-CN', 'en'
-    processLayouts = true
     enableCache = true
     cacheDir = file("${buildDir}/chart-a11y-cache")
     timeout = 30L

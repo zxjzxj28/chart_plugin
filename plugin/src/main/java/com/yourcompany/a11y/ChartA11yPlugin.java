@@ -69,8 +69,6 @@ public class ChartA11yPlugin implements Plugin<Project> {
                     }
 
                     task.getApiEndpoint().set(extension.getApiEndpoint());
-                    task.getApiKey().set(extension.getApiKey());
-                    task.getLocales().set(extension.getLocales());
                     task.getEnableCache().set(extension.getEnableCache());
                     task.getCacheDir().set(extension.getCacheDir());
                     task.getImageBasePath().set(extension.getImageBasePath());
@@ -97,8 +95,6 @@ public class ChartA11yPlugin implements Plugin<Project> {
                     task.setGroup("chart-a11y");
                     task.setDescription("Process layout files for accessibility for " + variant.getName());
 
-                    task.getLayoutProcessingEnabled().set(extension.getProcessLayouts());
-
                     // Input: src/main/res/layout
                     File layoutDir = new File(project.getProjectDir(), "src/main/res/layout");
                     task.getLayoutDir().set(layoutDir);
@@ -109,13 +105,10 @@ public class ChartA11yPlugin implements Plugin<Project> {
                     task.getOutputDir().set(outputDir);
                 });
 
-        // Add processed layouts as generated resource directory if layout processing is enabled
-        if (extension.getProcessLayouts().get()) {
-            variant.getSources().getRes().addGeneratedSourceDirectory(
-                    processLayoutsTask,
-                    ProcessLayoutsTask::getOutputDir
-            );
-        }
+        variant.getSources().getRes().addGeneratedSourceDirectory(
+                processLayoutsTask,
+                ProcessLayoutsTask::getOutputDir
+        );
 
         // Make generate{Variant}Resources depend on our tasks
         project.afterEvaluate(p -> {
@@ -123,9 +116,7 @@ public class ChartA11yPlugin implements Plugin<Project> {
             Task generateResourcesTask = p.getTasks().findByName(generateResourcesTaskName);
             if (generateResourcesTask != null) {
                 generateResourcesTask.dependsOn(generateTask);
-                if (extension.getProcessLayouts().get()) {
-                    generateResourcesTask.dependsOn(processLayoutsTask);
-                }
+                generateResourcesTask.dependsOn(processLayoutsTask);
             }
 
             // Also depend on pre-build tasks

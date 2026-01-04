@@ -25,8 +25,6 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
  *     android:layout_width="match_parent"
  *     android:layout_height="300dp"
  *     app:a11yChartId="sales_quarterly"
- *     app:a11yDescType="detailed"
- *     app:a11yFocusable="true"
  *     app:a11yEnableNavigation="true" /&gt;
  * </pre>
  * <p>Charts with {@code app:a11yEnableNavigation="true"} will automatically have
@@ -46,8 +44,6 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
  * <pre>
  * ChartA11y.with(view)
  *     .chartId("chart_id")
- *     .descType(DescType.DETAILED)
- *     .focusable(true)
  *     .roleDescription("柱状图")
  *     .enableDataPointNavigation(true)
  *     .apply();
@@ -173,29 +169,23 @@ public class ChartA11y {
             return false;
         }
 
-        // Parse tag: "a11y:{chartId}:{descType}:{enableNavigation}"
+        // Parse tag: "a11y:{chartId}:{enableNavigation}" or legacy "a11y:{chartId}:{descType}:{enableNavigation}"
         String[] parts = tagStr.substring(A11Y_TAG_PREFIX.length()).split(":");
-        if (parts.length < 3) {
+        if (parts.length < 2) {
             Log.w(TAG, "Invalid a11y tag format: " + tagStr);
             return false;
         }
 
         String chartId = parts[0];
-        String descTypeStr = parts[1];
-        boolean enableNavigation = "true".equalsIgnoreCase(parts[2]);
+        boolean enableNavigation = "true".equalsIgnoreCase(parts[parts.length - 1]);
 
         if (!enableNavigation) {
             return false;
         }
 
-        // Determine description type
-        DescType descType = "detailed".equalsIgnoreCase(descTypeStr)
-                ? DescType.DETAILED : DescType.BRIEF;
-
         // Apply data point navigation
         with(view)
                 .chartId(chartId)
-                .descType(descType)
                 .enableDataPointNavigation(true)
                 .apply();
 
@@ -302,9 +292,10 @@ public class ChartA11y {
         }
 
         /**
-         * Set the description type.
-         *
-         * @param descType BRIEF or DETAILED
+     * Set the description type.
+     * The SDK will prefer the single generated description resource when available.
+     *
+     * @param descType BRIEF or DETAILED
          * @return this builder
          */
         public Builder descType(@NonNull DescType descType) {
@@ -313,9 +304,10 @@ public class ChartA11y {
         }
 
         /**
-         * Set whether the view should be focusable for accessibility.
-         *
-         * @param focusable true to make focusable
+     * Set whether the view should be focusable for accessibility.
+     * Focusable is always enforced to true at runtime.
+     *
+     * @param focusable ignored; always true
          * @return this builder
          */
         public Builder focusable(boolean focusable) {
@@ -361,14 +353,18 @@ public class ChartA11y {
             String resourceName = toResourceName(chartId);
 
             // 设置 contentDescription
-            String descResourceName = RESOURCE_PREFIX + resourceName + "_" + descType.getSuffix();
+            String descResourceName = RESOURCE_PREFIX + resourceName;
             int descResId = resources.getIdentifier(descResourceName, "string", packageName);
+            if (descResId == 0) {
+                descResourceName = RESOURCE_PREFIX + resourceName + "_" + descType.getSuffix();
+                descResId = resources.getIdentifier(descResourceName, "string", packageName);
+            }
             if (descResId != 0) {
                 view.setContentDescription(resources.getString(descResId));
             }
 
             // 关键修复：确保 View 的无障碍属性正确配置
-            view.setFocusable(focusable);
+            view.setFocusable(true);
             view.setClickable(true);  // 添加这行！
             view.setLongClickable(true);  // 添加这行！
 
