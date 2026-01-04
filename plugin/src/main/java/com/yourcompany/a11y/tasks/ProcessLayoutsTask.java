@@ -65,6 +65,7 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
         }
 
         File outputDir = getOutputDir().get().getAsFile();
+        deleteDirectory(outputDir);
         outputDir.mkdirs();
 
         // Find all layout directories (layout, layout-land, etc.)
@@ -248,6 +249,23 @@ public abstract class ProcessLayoutsTask extends DefaultTask {
             transformer.transform(source, result);
         } catch (Exception e) {
             getLogger().error("Failed to write XML file: {}", e.getMessage());
+        }
+    }
+
+    private void deleteDirectory(File dir) {
+        if (dir == null || !dir.exists()) {
+            return;
+        }
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteDirectory(file);
+            } else {
+                file.delete();
+            }
         }
     }
 }
