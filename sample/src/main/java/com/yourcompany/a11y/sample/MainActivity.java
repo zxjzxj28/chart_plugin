@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize data point navigation for specific XML-configured charts
         // Option 1: By resource ID (recommended)
-        ChartA11y.initializeFromXml(this, R.id.barChart);
+//        ChartA11y.initializeFromXml(this, R.id.barChart);
 
         // Option 2: By view reference
         // ChartA11y.initializeFromXml(findViewById(R.id.barChart));

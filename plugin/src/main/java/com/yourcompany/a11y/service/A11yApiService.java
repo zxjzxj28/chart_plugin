@@ -170,10 +170,12 @@ public class A11yApiService {
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
+                System.out.println("请求出错");
                 throw new IOException("API request failed with status: " + response.code());
             }
 
             String responseBody = response.body() != null ? response.body().string() : "";
+            System.out.println(responseBody);
             return parseResponse(responseBody, config);
         }
     }

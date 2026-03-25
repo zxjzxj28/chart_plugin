@@ -34,9 +34,7 @@
             android:id="@+id/barChart"
             android:layout_width="match_parent"
             android:layout_height="300dp"
-            android:layout_marginTop="8dp"
-            app:a11yChartId="sales_quarterly"
-            app:a11yEnableNavigation="true" />
+            android:layout_marginTop="8dp" />
 
         <!-- Line Chart with code-based accessibility -->
         <TextView
